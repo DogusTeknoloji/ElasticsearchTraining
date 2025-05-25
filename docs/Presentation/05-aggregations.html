@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>5. Aggregations</title>
+  <link rel="stylesheet" href="https://unpkg.com/reveal.js/dist/reveal.css">
+  <link rel="stylesheet" href="https://unpkg.com/reveal.js/dist/theme/white.css">
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <section>
+        <h1>5. Aggregations</h1>
+        <pre><code>GET /products/_search
+{
+  "size": 0,
+  "aggs": {
+    "avg_price": { "avg": { "field": "price" } }
+  }
+}
+</code></pre>
+      </section>
+    </div>
+  </div>
+  <script src="https://unpkg.com/reveal.js/dist/reveal.js"></script>
+  <script>Reveal.initialize({hash:true, slideNumber:true});</script>
+</body>
+</html>

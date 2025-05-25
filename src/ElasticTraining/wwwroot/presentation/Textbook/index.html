@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elasticsearch Eğitim Sunumu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            /* background-color: #f3f4f6; /* Tailwind gray-100 - Kaldırıldı */
+            background-image: url('back.png'); /* EKLENDİ - Resim dosya adınız */
+            background-size: cover; /* EKLENDİ - Resmi kaplayacak şekilde ayarla */
+            background-position: center; /* EKLENDİ - Resmi ortala */
+            background-repeat: no-repeat; /* EKLENDİ - Resmin tekrar etmesini engelle */
+            color: #1f2937; /* Tailwind gray-800 */
+            overflow: hidden; /* Kaydırma çubuklarını gizle */
+        }
+        .presentation-container {
+            width: 90%;
+            max-width: 1000px;
+            height: 80vh; /* Yüksekliği ekranın %80'i yap */
+            max-height: 700px;
+            background-color: rgba(255, 255, 255, 0.92); /* GÜNCELLENDİ - Okunurluk için hafif yarı saydam beyaz */
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15); /* Gölge biraz daha belirginleştirildi */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* İçerik taşmasını engelle */
+        }
+        .slide {
+            display: none; /* Başlangıçta tüm slaytlar gizli */
+            flex-grow: 1;
+            padding: 40px;
+            overflow-y: auto; /* Slayt içi kaydırma */
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        .slide.active {
+            display: flex; /* Aktif slaytı göster */
+            flex-direction: column;
+            justify-content: center; /* İçeriği dikeyde ortala */
+            align-items: center; /* İçeriği yatayda ortala */
+            text-align: center; /* Metni ortala */
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .slide h1, .slide h2 {
+            color: #1e40af; /* Tailwind blue-800 */
+            margin-bottom: 20px;
+        }
+        .slide h1 {
+            font-size: 2.5rem; /* 40px */
+            font-weight: 700;
+        }
+        .slide h2 {
+            font-size: 1.875rem; /* 30px */
+            font-weight: 600;
+        }
+        .slide p, .slide ul {
+            font-size: 1.125rem; /* 18px */
+            line-height: 1.6;
+            color: #374151; /* Tailwind gray-700 */
+            max-width: 800px; /* Metin genişliğini sınırla */
+            text-align: left; /* Liste ve paragrafları sola hizala */
+        }
+        .slide ul {
+            list-style-position: inside;
+            padding-left: 20px; /* Liste için iç boşluk */
+        }
+        .slide ul li {
+            margin-bottom: 10px;
+        }
+        .slide code {
+            background-color: #e5e7eb; /* Tailwind gray-200 */
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', Courier, monospace;
+            color: #111827; /* Tailwind gray-900 */
+        }
+        .slide pre {
+            background-color: #1f2937; /* Tailwind gray-800 */
+            color: #f3f4f6; /* Tailwind gray-100 */
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            text-align: left;
+            margin-top: 20px;
+            max-width: 100%;
+        }
+        .slide pre code {
+            background-color: transparent;
+            padding: 0;
+            color: inherit;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background-color: rgba(229, 231, 235, 0.85); /* Tailwind gray-200 - Hafif şeffaflık */
+            border-top: 1px solid #d1d5db; /* Tailwind gray-300 */
+        }
+        .nav-button {
+            background-color: #2563eb; /* Tailwind blue-600 */
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem; /* 16px */
+            transition: background-color 0.3s ease;
+        }
+        .nav-button:hover {
+            background-color: #1d4ed8; /* Tailwind blue-700 */
+        }
+        .nav-button:disabled {
+            background-color: #9ca3af; /* Tailwind gray-400 */
+            cursor: not-allowed;
+        }
+        .slide-counter {
+            font-size: 1rem; /* 16px */
+            color: #4b5563; /* Tailwind gray-600 */
+        }
+
+        /* Mobil uyumluluk */
+        @media (max-width: 768px) {
+            .presentation-container {
+                width: 95%;
+                height: 90vh;
+            }
+            .slide {
+                padding: 20px;
+            }
+            .slide h1 {
+                font-size: 1.875rem; /* 30px */
+            }
+            .slide h2 {
+                font-size: 1.5rem; /* 24px */
+            }
+            .slide p, .slide ul {
+                font-size: 1rem; /* 16px */
+            }
+            .navigation {
+                padding: 15px 20px;
+            }
+            .nav-button {
+                padding: 10px 18px;
+                font-size: 0.875rem; /* 14px */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation-container">
+        <div class="slide active">
+            <h1>Elasticsearch Eğitimi</h1>
+            <p class="mt-4 text-xl text-gray-600 text-center">Şirket içi kapsamlı Elasticsearch eğitimi.</p>
+            <img src="elastic-logo.png" alt="Elasticsearch Logosu" class="mt-8 rounded-lg shadow-md" onerror="this.onerror=null;this.src='https://placehold.co/400x200/CCCCCC/FFFFFF?text=Resim+Yüklenemedi';">
+        </div>
+
+        <div class="slide">
+            <h2>Neden Elasticsearch?</h2>
+            <ul>
+                <li>Geleneksel RDBMS'lerin full-text search ve büyük veri analizindeki zorlukları.</li>
+                <li><code>LIKE '%...%'</code> sorgularının yetersizliği: Performans, alaka (relevance), dil desteği.</li>
+                <li>Yapısal olmayan (unstructured) ve yarı yapısal (semi-structured) verilerin (loglar, metinler, JSON dokümanları) artan önemi.</li>
+                <li>Gerçek dünya senaryoları: E-ticarette ürün arama, log analizi, anomali tespiti.</li>
+            </ul>
+        </div>
+
+        <div class="slide">
+            <h2>Elasticsearch Nedir?</h2>
+            <p>Apache Lucene üzerine kurulu, dağıtık, RESTful arama ve analitik motorudur.</p>
+            <h3 class="text-lg font-semibold mt-6 mb-2 text-blue-700">Temel Özellikleri:</h3>
+            <ul>
+                <li>Hız ve Ölçeklenebilirlik</li>
+                <li>Esneklik</li>
+                <li>Gerçek Zamanlıya Yakın (Near Real-Time) Sonuçlar</li>
+            </ul>
+            <h3 class="text-lg font-semibold mt-6 mb-2 text-blue-700">Yaygın Kullanım Alanları:</h3>
+            <ul>
+                <li>Full-Text Search (Gelişmiş site içi arama)</li>
+                <li>Log ve Metrik Analizi (Gözlemlenebilirlik - Observability)</li>
+                <li>İş Zekası (Business Intelligence) ve Analitik Raporlama</li>
+                <li>Güvenlik Analitiği (SIEM)</li>
+            </ul>
+        </div>
+
+        <div class="slide">
+            <h2>Temel Mimarî Kavramlar</h2>
+            <div class="grid md:grid-cols-2 gap-6 mt-4 text-left">
+                <div class="bg-gray-100 p-4 rounded-lg">
+                    <h3 class="font-semibold text-blue-700">Document (Doküman)</h3>
+                    <p>Verinin JSON formatındaki temel birimi.</p>
+                </div>
+                <div class="bg-gray-100 p-4 rounded-lg">
+                    <h3 class="font-semibold text-blue-700">Index (İndeks)</h3>
+                    <p>Benzer özelliklere sahip dokümanların koleksiyonu.</p>
+                </div>
+                <div class="bg-gray-100 p-4 rounded-lg">
+                    <h3 class="font-semibold text-blue-700">Node (Düğüm)</h3>
+                    <p>Cluster'ın bir parçası olan tek bir Elasticsearch sunucusu.</p>
+                </div>
+                <div class="bg-gray-100 p-4 rounded-lg">
+                    <h3 class="font-semibold text-blue-700">Cluster (Küme)</h3>
+                    <p>Bir veya daha fazla Node'dan oluşan yapı.</p>
+                </div>
+                <div class="bg-gray-100 p-4 rounded-lg">
+                    <h3 class="font-semibold text-blue-700">Shard (Parça)</h3>
+                    <p>Bir index'in yatay olarak bölündüğü parçalar.</p>
+                </div>
+                <div class="bg-gray-100 p-4 rounded-lg">
+                    <h3 class="font-semibold text-blue-700">Replica (Kopya)</h3>
+                    <p>Primary Shard'ların kopyaları. Yüksek erişilebilirlik sağlar.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <h2>Veri Yönetimi: Indexing ve Mapping</h2>
+            <ul>
+                <li>Doküman Yönetimi (CRUD Operasyonları): <code>Index API</code>, <code>Get API</code>, <code>Update API</code>, <code>Delete API</code></li>
+                <li>Meta Alanlar: <code>_index</code>, <code>_id</code>, <code>_version</code>, <code>_source</code>, <code>_score</code></li>
+                <li>Bulk API (<code>_bulk</code>): Toplu işlemler için performans ve verimlilik.</li>
+                <li>Mapping (Şema Yönetimi): Verinizin anayasası.
+                    <ul>
+                        <li>Dynamic Mapping: Otomatik tip algılama.</li>
+                        <li>Explicit Mapping: Alan tiplerini manuel tanımlama.</li>
+                        <li>Temel Veri Tipleri: <code>text</code>, <code>keyword</code>, sayısal tipler, <code>date</code>, <code>boolean</code>, <code>ip</code>, <code>geo_point</code>.</li>
+                        <li>Mapping Parametreleri: <code>index</code>, <code>analyzer</code>, <code>fields</code>, <code>dynamic</code>.</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        <div class="slide">
+            <h2>Arama Sanatı: Query DSL ile Sorgulama</h2>
+            <ul>
+                <li>Arama Sorgusunun Anatomisi (<code>_search</code> API): URI Search vs Request Body Search.</li>
+                <li>Query Context vs Filter Context: Skorlama ve performans farkları.</li>
+                <li>Temel Sorgu Tipleri:
+                    <ul>
+                        <li>Full-Text Queries: <code>match</code>, <code>match_phrase</code>, <code>multi_match</code>.</li>
+                        <li>Term-Level Queries: <code>term</code>, <code>terms</code>, <code>range</code>, <code>exists</code>.</li>
+                    </ul>
+                </li>
+                <li>Sorguları Birleştirme: <code>bool</code> Sorgusu (<code>must</code>, <code>filter</code>, <code>should</code>, <code>must_not</code>).</li>
+            </ul>
+        </div>
+
+        <div class="slide">
+            <h2>İleri Arama ve Aggregations</h2>
+            <h3 class="text-lg font-semibold mt-6 mb-2 text-blue-700">Arama Sonuçlarını Yönetme:</h3>
+            <ul>
+                <li>Sayfalama: <code>from</code> ve <code>size</code>.</li>
+                <li>Sıralama: <code>sort</code>.</li>
+                <li>Kaynak Filtreleme: <code>_source</code>.</li>
+                <li>Highlighting.</li>
+            </ul>
+            <h3 class="text-lg font-semibold mt-6 mb-2 text-blue-700">Aggregations (Veriyi Gruplama ve Analiz):</h3>
+            <ul>
+                <li>Metric Aggregations: <code>min</code>, <code>max</code>, <code>avg</code>, <code>sum</code>, <code>stats</code>, <code>cardinality</code>.</li>
+                <li>Bucket Aggregations: <code>terms</code>, <code>range</code>, <code>date_range</code>, <code>histogram</code>, <code>date_histogram</code>.</li>
+                <li>İç İçe Aggregation'lar (Sub-aggregations).</li>
+            </ul>
+        </div>
+
+        <div class="slide">
+            <h2>Elastic Stack Ekosistemi</h2>
+            <div class="grid md:grid-cols-3 gap-6 mt-4 text-left">
+                <div class="bg-gray-100 p-4 rounded-lg">
+                    <h3 class="font-semibold text-blue-700">Kibana</h3>
+                    <p>Veri görselleştirme ve keşif aracı. (Discover, Visualize, Dashboard).</p>
+                </div>
+                <div class="bg-gray-100 p-4 rounded-lg">
+                    <h3 class="font-semibold text-blue-700">Logstash</h3>
+                    <p>Sunucu taraflı veri işleme hattı. Veri toplama, dönüştürme ve gönderme.</p>
+                </div>
+                <div class="bg-gray-100 p-4 rounded-lg">
+                    <h3 class="font-semibold text-blue-700">Beats</h3>
+                    <p>Hafif, tek amaçlı veri göndericileri (Filebeat, Metricbeat vb.).</p>
+                </div>
+            </div>
+            <img src="https://placehold.co/500x250/005571/FFFFFF?text=Elastic+Stack" alt="Elastic Stack Mimarisi" class="mt-8 rounded-lg shadow-md" onerror="this.onerror=null;this.src='https://placehold.co/500x250/CCCCCC/FFFFFF?text=Resim+Yüklenemedi';">
+        </div>
+
+        <div class="slide">
+            <h2>.NET Log Simülatörü</h2>
+            <p>Eğitimde pratik uygulamalar için geliştirilmiş ASP.NET Core Razor Pages uygulaması.</p>
+            <h3 class="text-lg font-semibold mt-6 mb-2 text-blue-700">Yetenekleri:</h3>
+            <ul>
+                <li>Index Template Yönetimi (<code>application_logs</code>).</li>
+                <li><code>products</code> index'i ve örnek veri seti oluşturma.</li>
+                <li>Arka Planda Sürekli Log Yazma Servisi.</li>
+                <li>Geriye Dönük 30 Günlük Tarihsel Veri Oluşturma.</li>
+                <li>Elasticsearch bağlantı durumu ve küme sağlığı izleme.</li>
+            </ul>
+            <pre><code class="language-json">
+// application_logs index template (kısaltılmış)
+{
+  "mappings": {
+    "dynamic": "false",
+    "properties": {
+      "@timestamp": { "type": "date" },
+      "service_name": { "type": "keyword" },
+      "level": { "type": "keyword" },
+      "message": { "type": "text" },
+      // ... diğer alanlar
+    }
+  }
+}
+            </code></pre>
+        </div>
+
+        <div class="slide">
+            <h2>Hızlı Başlangıç</h2>
+            <p>Projeyi yerel makinenizde çalıştırmak için adımlar:</p>
+            <ol class="list-decimal list-inside text-left mt-4 space-y-2">
+                <li>Depoyu klonlayın: <code>git clone https://github.com/DogusTeknoloji/ElasticsearchTraining.git</code></li>
+                <li>Docker ile Elasticsearch ve Kibana'yı başlatın:
+                    <pre><code class="language-bash">
+cd docker
+docker-compose up -d
+                    </code></pre>
+                </li>
+                <li>Eğitim uygulamasını çalıştırın:
+                    <pre><code class="language-bash">
+cd src/ElasticTraining
+dotnet run
+                    </code></pre>
+                </li>
+                <li>Kibana: <a href="http://localhost:5601" target="_blank" class="text-blue-600 hover:underline">http://localhost:5601</a></li>
+                <li>Uygulama: <a href="https://localhost:5001" target="_blank" class="text-blue-600 hover:underline">https://localhost:5001</a></li>
+            </ol>
+        </div>
+
+        <div class="slide">
+            <h2>Kapanış ve Kaynaklar</h2>
+            <p>Eğitimde öğrenilen ana konuların özeti ve production ipuçları.</p>
+            <h3 class="text-lg font-semibold mt-6 mb-2 text-blue-700">Önemli Kaynaklar:</h3>
+            <ul>
+                <li><a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html" target="_blank" class="text-blue-600 hover:underline">Elasticsearch Resmi Dokümantasyonu</a></li>
+                <li><a href="https://www.elastic.co/guide/en/kibana/current/index.html" target="_blank" class="text-blue-600 hover:underline">Kibana Kullanıcı Kılavuzu</a></li>
+                <li>Proje Deposu: <a href="https://github.com/DogusTeknoloji/ElasticsearchTraining" target="_blank" class="text-blue-600 hover:underline">GitHub</a></li>
+            </ul>
+            <p class="mt-8 text-2xl font-semibold text-green-600">Teşekkürler!</p>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <button id="prevBtn" class="nav-button">Geri</button>
+        <span id="slideCounter" class="slide-counter"></span>
+        <button id="nextBtn" class="nav-button">İleri</button>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const slideCounter = document.getElementById('slideCounter');
+        let currentSlide = 0;
+
+        function showSlide(index) {
+            slides.forEach((slide, i) => {
+                slide.classList.remove('active');
+                if (i === index) {
+                    slide.classList.add('active');
+                }
+            });
+            currentSlide = index;
+            updateNavButtons();
+            updateSlideCounter();
+        }
+
+        function updateNavButtons() {
+            prevBtn.disabled = currentSlide === 0;
+            nextBtn.disabled = currentSlide === slides.length - 1;
+        }
+
+        function updateSlideCounter() {
+            slideCounter.textContent = `Slayt ${currentSlide + 1} / ${slides.length}`;
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentSlide > 0) {
+                showSlide(currentSlide - 1);
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentSlide < slides.length - 1) {
+                showSlide(currentSlide + 1);
+            }
+        });
+
+        // Klavye ile gezinme
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowRight' || event.key === 'PageDown') {
+                if (nextBtn.disabled === false) nextBtn.click(); // Sadece etkinse tetikle
+            } else if (event.key === 'ArrowLeft' || event.key === 'PageUp') {
+                 if (prevBtn.disabled === false) prevBtn.click(); // Sadece etkinse tetikle
+            }
+        });
+
+        // Başlangıçta ilk slaytı göster
+        showSlide(0);
+    </script>
+</body>
+</html>

@@ -1,6 +1,6 @@
-# Elasticsearch Macerası: Bir Geliştiricinin Kılavuzu
+# Elasticsearch Macerası: Bir Maceracının Kılavuzu
 
-## Hoş Geldin Cesur Geliştirici!
+## Hoş Geldin Cesur Arkadaşım!
 
 Eğer bu satırları okuyorsan, muhtemelen sen de veri okyanusunda anlamlı bir şeyler arayan, `LIKE '%aramaKriterim%'` sorgularının yavaşlığından bıkmış, logların arasında kaybolmak yerine onlara hükmetmek isteyen bir kahramansın. Ya da sadece yöneticin "Şu Elasticsearch'e bir bakıver" dedi ve sen de kendini burada buldun. Her iki durumda da doğru yerdesin!
 

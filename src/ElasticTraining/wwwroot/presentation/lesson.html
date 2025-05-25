@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="tr">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Elasticsearch Eğitimi</title>
+
+        <link rel="stylesheet" href="../lib/reveal/dist/reset.css" />
+        <link rel="stylesheet" href="../lib/reveal/dist/reveal.css" />
+        <link rel="stylesheet" href="../lib/reveal/dist/theme/moon.css" />
+
+        <!-- Theme used for syntax highlighted code -->
+        <link
+            rel="stylesheet"
+            href="../lib/reveal/plugin/highlight/monokai.css"
+        />
+
+        <link rel="stylesheet" href="./lesson.css" />
+    </head>
+    <body>
+        <div class="reveal">
+            <div class="slides">
+                <section
+                    data-markdown="slides/s01.md"
+                    data-separator="^\n---\n$"
+                    data-separator-vertical="^\n--\n$"
+                ></section>
+
+                <section
+                    data-markdown="slides/s02.md"
+                    data-separator="^\n---\n$"
+                    data-separator-vertical="^\n--\n$"
+                ></section>
+
+                <section
+                    data-markdown="slides/s03.md"
+                    data-separator="^\n---\n$"
+                    data-separator-vertical="^\n--\n$"
+                ></section>
+            </div>
+        </div>
+
+        <script src="../lib/reveal/dist/reveal.js"></script>
+        <script src="../lib/reveal/plugin/notes/notes.js"></script>
+        <script src="../lib/reveal/plugin/markdown/markdown.js"></script>
+        <script src="../lib/reveal/plugin/highlight/highlight.js"></script>
+
+        <script>
+            Reveal.initialize({
+                hash: true,
+                slideNumber: "c/t",
+                plugins: [RevealMarkdown, RevealHighlight, RevealNotes],
+            });
+        </script>
+    </body>
+</html>

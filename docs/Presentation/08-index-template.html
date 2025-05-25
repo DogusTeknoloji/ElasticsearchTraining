@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>8. application_logs İndeks Şablonu</title>
+  <link rel="stylesheet" href="https://unpkg.com/reveal.js/dist/reveal.css">
+  <link rel="stylesheet" href="https://unpkg.com/reveal.js/dist/theme/white.css">
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <section>
+        <h1>8. application_logs İndeks Şablonu</h1>
+        <pre><code>{
+  "mappings": {
+    "dynamic": "false",
+    "properties": {
+      "@timestamp": { "type": "date" },
+      "correlation_id": { "type": "keyword" },
+      "service_name": { "type": "keyword" },
+      "level": { "type": "keyword" },
+      "thread_name": { "type": "keyword" },
+      "logger_name": { "type": "keyword" },
+      "host_ip": { "type": "ip" },
+      "message": { "type": "text" },
+      "exception": { /*...*/ }
+    }
+  }
+}
+</code></pre>
+      </section>
+    </div>
+  </div>
+  <script src="https://unpkg.com/reveal.js/dist/reveal.js"></script>
+  <script>Reveal.initialize({hash:true, slideNumber:true});</script>
+</body>
+</html>
