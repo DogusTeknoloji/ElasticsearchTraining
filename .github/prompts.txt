@@ -1,0 +1,54 @@
+#coin dosyasındaki 9 bölüme bir ekleme yapmamız gerekiyor. Amacımız bu bölümün içeriğini daha detaylı ve pratik odaklı hale getirmek. Bu konuda öncelikle ders sırasında loglara sürekli veri yazımını sağlayan bir .Net 9.0 uygulaması yazacağız. Bu uygulama application_logs-* isim template'i  şeklindeki bir index'e veri eklememizi sağlayacak. bu template'in mapping'i şöyle olcak : 
+
+```json
+{
+  "mappings": {
+    "dynamic": "false",
+    "properties": {
+      "@timestamp": { "type": "date" },
+      "correlation_id": { "type": "keyword" },
+      "service_name": { "type": "keyword" },
+      "level": { "type": "keyword" },
+      "thread_name": { "type": "keyword" },
+      "logger_name": { "type": "keyword" },
+      "host_ip": { "type": "ip" },
+      "message": { "type": "text" },
+      "exception": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "keyword" },
+          "message": { "type": "text" },
+          "stack_trace": { 
+            "type": "text",
+            "index": false 
+          },
+          "inner_exception": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "keyword" },
+              "message": { "type": "text" },
+              "stack_trace": { 
+                "type": "text", 
+                "index": false 
+              }
+            }
+          }
+        }
+      },
+      "http_status_code": { "type": "integer" },
+      "response_time_ms": { "type": "long" }
+    }
+  }
+}
+```
+
+uygulamamız için bazı detaylar şöyle: 
+1. uygulama .Net 9.0 ve Asp.Net Core 9.0 Razor Pages olarak oluşturulacak. Ki bu projeyi ben oluşturdum. onun üzerinden ilerleyeceğiz.
+2. uygulamadaki işlemler şöyle olacak. 
+    * uygulamadan ders ortamı için elasticsearch'e index, index-template gibi yapılar eklenebilecek. mesela yukarıda yazdığım mapping bir index template olarak eklenecek. ayrıca eğitim kitabında yer alan products ismindeki index'de eklenebilecek. 
+    * uygulamada products index'ine standart bir veri seti eklenebilecek bir sayfa yer alacak.
+    * uygulamada arka planda çalışabilecek ve başlatılıp durdurulabilecek bir şekilde çalışabilecek, application_logs ismindeki index'e loglar yazacak bir sayfa veya sistem olacak.
+
+
+
+    
