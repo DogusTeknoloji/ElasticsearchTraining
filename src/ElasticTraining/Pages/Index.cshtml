@@ -1,10 +1,153 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Elasticsearch Eğitimi - Log Simülatörü";
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <h1 class="display-4">🔍 Elasticsearch Eğitimi</h1>
+    <p class="lead">Log Simülatörü ve Veri Yönetim Aracı</p>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-8 mx-auto">
+        <!-- Elasticsearch Bağlantı Durumu -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>📊 Elasticsearch Bağlantı Durumu</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Durum:</strong> 
+                            @if (Model.IsElasticsearchAvailable)
+                            {
+                                <span class="badge bg-success">✅ Bağlı</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">❌ Bağlantı Yok</span>
+                            }
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Log Üretimi:</strong> 
+                            @if (Model.IsLogGeneratorRunning)
+                            {
+                                <span class="badge bg-info">🔄 Çalışıyor</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">⏸️ Durduruldu</span>
+                            }
+                        </p>
+                    </div>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.ClusterHealth))
+                {
+                    <p><strong>Cluster Bilgisi:</strong> <code>@Model.ClusterHealth</code></p>
+                }
+            </div>
+        </div>
+
+        <!-- Mesaj Alanı -->
+        @if (!string.IsNullOrEmpty(Model.Message))
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                @Model.Message
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <!-- Elasticsearch Yapılandırması -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>⚙️ Elasticsearch Yapılandırması</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Eğitim için gerekli index'leri ve template'leri oluşturun.</p>
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <form method="post" asp-page-handler="CreateTemplate">
+                            <button type="submit" class="btn btn-primary w-100" @(!Model.IsElasticsearchAvailable ? "disabled" : "")>
+                                📋 Application Logs Template Oluştur
+                            </button>
+                        </form>
+                    </div>
+                    <div class="col-md-6">
+                        <form method="post" asp-page-handler="CreateProductsIndex">
+                            <button type="submit" class="btn btn-primary w-100" @(!Model.IsElasticsearchAvailable ? "disabled" : "")>
+                                🛍️ Products Index Oluştur
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Veri Yönetimi -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>📦 Veri Yönetimi</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Eğitimde kullanılacak örnek verileri yükleyin.</p>
+                
+                <form method="post" asp-page-handler="LoadSampleProducts">
+                    <button type="submit" class="btn btn-success w-100" @(!Model.IsElasticsearchAvailable ? "disabled" : "")>
+                        📁 Örnek Ürün Verilerini Yükle
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Log Üretimi Kontrolü -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>📝 Log Üretimi Kontrolü</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    Arka plan servisini kullanarak sürekli log verisi üretin. 
+                    Bu loglar <code>application_logs-YYYY-MM-DD</code> formatında index'lere yazılır.
+                </p>
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <form method="post" asp-page-handler="StartLogGenerator">
+                            <button type="submit" class="btn btn-success w-100" 
+                                    @(!Model.IsElasticsearchAvailable || Model.IsLogGeneratorRunning ? "disabled" : "")>
+                                ▶️ Log Üretimini Başlat
+                            </button>
+                        </form>
+                    </div>
+                    <div class="col-md-6">
+                        <form method="post" asp-page-handler="StopLogGenerator">
+                            <button type="submit" class="btn btn-warning w-100" 
+                                    @(!Model.IsLogGeneratorRunning ? "disabled" : "")>
+                                ⏹️ Log Üretimini Durdur
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bilgi Kutusu -->
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">💡 Eğitim İpuçları</h5>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li><strong>Kibana Dev Tools:</strong> <code>http://localhost:5601/app/dev_tools#/console</code> adresinden sorgu yazabilirsiniz.</li>
+                    <li><strong>Index'leri Listele:</strong> <code>GET /_cat/indices?v</code></li>
+                    <li><strong>Log Verilerini Görüntüle:</strong> <code>GET /application_logs-*/_search</code></li>
+                    <li><strong>Ürün Verilerini Görüntüle:</strong> <code>GET /products/_search</code></li>
+                    <li><strong>Template'leri Listele:</strong> <code>GET /_index_template</code></li>
+                </ul>
+            </div>
+        </div>
+    </div>
 </div>
