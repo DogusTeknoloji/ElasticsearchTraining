@@ -1,68 +1,68 @@
-# Bölüm 3: Arama Sanatında Ustalaşın: Query DSL
+# Chapter 3: Mastering the Art of Search: Query DSL
 
-Verilerimizi Elasticsearch'e başarıyla yükledik ve onlara güzel bir kimlik kartı (mapping) verdik. Şimdi sıra geldi o verilerin içinde kaybolmadan, istediğimiz bilgiye ışık hızıyla ulaşmaya! İşte bu bölümde Elasticsearch'ün kalbi olan **Query DSL (Domain Specific Language)** ile tanışacak, farklı arama senaryolarına uygun sorgular yazmayı öğreneceğiz. "Google'a yazar gibi" arama yapmaktan çok daha fazlasını keşfedeceğiz. Hazırsan, arama gözlüklerini tak ve başlayalım!
+We've successfully loaded our data into Elasticsearch and given it a nice identity card (mapping). Now it's time to navigate through that data without getting lost and reach the information we want at lightning speed! In this chapter, we'll meet Elasticsearch's heart, the **Query DSL (Domain Specific Language)**, and learn to write queries suitable for different search scenarios. We'll discover much more than just searching "like you type into Google." If you're ready, put on your search glasses and let's begin!
 
-## 3.1 Arama Sorgusunun Anatomisi: `_search` API'si ile Tanışma
+## 3.1 Anatomy of a Search Query: Meeting the `_search` API
 
-Elasticsearch'te arama yapmak için temel olarak `_search` endpoint'ini kullanırız. Bu endpoint'e bir HTTP GET veya POST isteği göndererek sorgularımızı iletebiliriz.
+To search in Elasticsearch, we primarily use the `_search` endpoint. We can send our queries to this endpoint via an HTTP GET or POST request.
 
-* **URI Search (GET ile Basit Aramalar):** Çok basit aramalar için URL üzerinden parametreler (`q=aranan_kelime` gibi) gönderilebilir.
+* **URI Search (Simple Searches with GET):** For very simple searches, parameters can be sent via the URL (e.g., `q=searched_word`).
 
   ```http
   GET /products/_search?q=name:laptop
   GET /application_logs-2024-05-24/_search?q=level:ERROR
   ```
 
-  Bu yöntem hızlı ve kolaydır ama karmaşık sorgular için yetersiz kalır ve bazı karakterlerin URL encoding'i ile uğraşmak gerekebilir. "Hızlıca bir bakıp çıkacağım" durumları için idare eder.
+  This method is quick and easy but falls short for complex queries, and you might have to deal with URL encoding for some characters. It's okay for "quick peek" situations.
 
-* **Request Body Search (POST ile Kapsamlı Aramalar):** Asıl gücümüzü göstereceğimiz yer burası! Sorgularımızı JSON formatında, isteğin gövdesinde (`request body`) göndeririz. Bu yöntem çok daha esnek ve güçlüdür.
+* **Request Body Search (Comprehensive Searches with POST):** This is where we'll show our real power! We send our queries in JSON format in the request body. This method is much more flexible and powerful.
 
   ```http
   POST /products/_search
   {
     "query": {
-      // Sorgu detayları buraya gelecek
+      // Query details will go here
     }
   }
   ```
 
-  Bundan sonraki tüm örneklerimizde bu yapıyı kullanacağız.
+  We will use this structure in all our subsequent examples.
 
-**Query Context vs Filter Context: Skor mu, Hız mı?**
+**Query Context vs Filter Context: Score or Speed?**
 
-Elasticsearch'te sorgu yazarken karşımıza iki önemli "context" (bağlam) çıkar: **Query Context** ve **Filter Context**. Bu ikisinin farkını anlamak, hem doğru sonuçlar almak hem de performansı optimize etmek için çok önemlidir.
+When writing queries in Elasticsearch, we encounter two important "contexts": **Query Context** and **Filter Context**. Understanding the difference between these two is crucial for both getting accurate results and optimizing performance.
 
-* **Query Context (`query` anahtarı altında):**
-  * **Amacı:** "Bu doküman, arama kriterlerime **ne kadar iyi** eşleşiyor?" sorusuna cevap arar.
-  * **Skorlama (`_score`):** Eşleşen her doküman için bir **alaka skoru (`_score`)** hesaplar. Skor ne kadar yüksekse, doküman o kadar alakalı demektir. Sonuçlar varsayılan olarak bu skora göre büyükten küçüğe sıralanır.
-  * **Kullanım Alanı:** Full-text aramalarda, kullanıcının aradığı şeye en yakın sonuçları bulmak istediğimizde kullanılır. Örneğin, bir ürün adında veya açıklamasında geçen kelimelere göre arama yaparken.
-  * **Sorgu Tipleri:** Genellikle `match`, `multi_match`, `query_string` gibi full-text sorguları bu context'te kullanılır.
+* **Query Context (under the `query` key):**
+  * **Purpose:** Seeks to answer the question, "How **well** does this document match my search criteria?"
+  * **Scoring (`_score`):** Calculates a **relevance score (`_score`)** for each matching document. The higher the score, the more relevant the document. Results are sorted by this score in descending order by default.
+  * **Use Case:** Used in full-text searches when we want to find the results closest to what the user is looking for. For example, when searching based on words in a product name or description.
+  * **Query Types:** Full-text queries like `match`, `multi_match`, `query_string` are typically used in this context.
 
-* **Filter Context (`filter` anahtarı altında, genellikle `bool` sorgusu içinde):**
-  * **Amacı:** "Bu doküman, arama kriterlerime eşleşiyor mu? (Evet/Hayır)" sorusuna cevap arar.
-  * **Skorlama Yok:** Alaka skoru hesaplanmaz. Bir doküman ya filtreye uyar ya da uymaz.
-  * **Performans ve Cache'leme:** Skorlama yapılmadığı için genellikle query context'ten daha hızlıdır. Ayrıca, filtre sonuçları Elasticsearch tarafından sıkça **cache'lenebilir**, bu da tekrarlayan sorgularda performansı ciddi şekilde artırır. "Bu filtreyi daha önce görmüştüm, sonucu hazır!" der ES.
-  * **Kullanım Alanı:** Kesin eşleşmeler, aralıklar veya belirli bir koşulu sağlayan dokümanları bulmak için idealdir. Örneğin, "kategorisi 'Elektronik' olan ürünler", "fiyatı 1000-2000 TL arasında olanlar", "stokta olan ürünler" gibi.
-  * **Sorgu Tipleri:** Genellikle `term`, `terms`, `range`, `exists` gibi birebir eşleşme veya yapısal sorgular bu context'te kullanılır.
+* **Filter Context (under the `filter` key, usually within a `bool` query):**
+  * **Purpose:** Seeks to answer the question, "Does this document match my search criteria? (Yes/No)".
+  * **No Scoring:** Relevance score is not calculated. A document either matches the filter or it doesn't.
+  * **Performance and Caching:** Since no scoring is done, it's generally faster than the query context. Also, filter results can often be **cached** by Elasticsearch, which significantly improves performance for repetitive queries. ES says, "I've seen this filter before, the result is ready!"
+  * **Use Case:** Ideal for finding documents that meet exact matches, ranges, or a specific condition. For example, "products in the 'Electronics' category," "those with a price between 1000-2000 TL," "products in stock."
+  * **Query Types:** Exact match or structural queries like `term`, `terms`, `range`, `exists` are typically used in this context.
 
-**Ne Zaman Hangisini Kullanmalı?**
+**When to Use Which?**
 
-* Eğer "en alakalı" sonuçları bulmak ve skorlamanın önemli olduğu bir full-text arama yapıyorsan **Query Context**.
-* Eğer sadece belirli bir koşula uyan/uymayan dokümanları filtrelemek, evet/hayır cevabı almak ve performansı önceliklendirmek istiyorsan **Filter Context**.
-* Çoğu zaman bu ikisini birlikte kullanırız: `bool` sorgusu içinde hem `must` (query context) hem de `filter` (filter context) kısımlarını kullanarak hem alakalı hem de filtrelenmiş sonuçlar elde ederiz.
+* If you're doing a full-text search where finding the "most relevant" results and scoring is important, use **Query Context**.
+* If you only want to filter documents that meet/do not meet a specific condition, get a yes/no answer, and prioritize performance, use **Filter Context**.
+* Often, we use both together: within a `bool` query, we use both `must` (query context) and `filter` (filter context) clauses to get results that are both relevant and filtered.
 
-Bu ayrım, sorgularınızın hem doğruluğunu hem de hızını optimize etmenizde kilit rol oynayacaktır.
+This distinction will play a key role in optimizing both the accuracy and speed of your queries.
 
-## 3.2 Temel Sorgu Tipleri: Query DSL'e İlk Adımlar
+## 3.2 Basic Query Types: First Steps into Query DSL
 
-Query DSL, Elasticsearch'e ne aradığımızı anlatmak için kullandığımız JSON tabanlı bir dildir. Oldukça zengin ve esnektir. Şimdi en sık kullanılan temel sorgu tiplerine bir göz atalım.
+Query DSL is a JSON-based language we use to tell Elasticsearch what we're looking for. It's quite rich and flexible. Let's now take a look at the most commonly used basic query types.
 
-### 3.2.1 Full-Text Sorguları (Genellikle Query Context'te)
+### 3.2.1 Full-Text Queries (Usually in Query Context)
 
-Bu sorgular, metin alanlarında analiz edilmiş (token'lara ayrılmış) içerik üzerinde arama yapar.
+These queries search on analyzed (tokenized) content in text fields.
 
-* **`match` Sorgusu: Standart Full-Text Arama**
-  En yaygın kullanılan full-text sorgusudur. Verilen metni analiz eder (arama terimini de analiz eder!) ve eşleşen dokümanları bulur.
+* **`match` Query: Standard Full-Text Search**
+  The most commonly used full-text query. It analyzes the given text (also analyzes the search term!) and finds matching documents.
 
   ```http
   POST /products/_search
@@ -75,7 +75,7 @@ Bu sorgular, metin alanlarında analiz edilmiş (token'lara ayrılmış) içerik
   }
   ```
 
-  * `operator`: Varsayılan olarak `OR`'dur (yani "powerful" VEYA "gaming" VEYA "laptop" içerenler). `AND` yaparsanız tüm kelimelerin geçmesi gerekir.
+  * `operator`: Defaults to `OR` (i.e., those containing "powerful" OR "gaming" OR "laptop"). If you set it to `AND`, all words must be present.
 
       ```http
       POST /products/_search
@@ -91,12 +91,12 @@ Bu sorgular, metin alanlarında analiz edilmiş (token'lara ayrılmış) içerik
       }
       ```
 
-  * `fuzziness`: Yazım hatalarını tolere etmek için kullanılır. `AUTO` veya `1`, `2` gibi Levenshtein mesafesi değerleri alabilir. "Laptob" yazsan da "laptop" bulsun diye.
+  * `fuzziness`: Used to tolerate typos. Can take Levenshtein distance values like `AUTO` or `1`, `2`. So even if you type "Laptob," it finds "laptop."
 
-  Log mesajları içinde belirli bir hata kodunu veya kelimeyi aramak için kullanılabilir:
+  Can be used to search for a specific error code or word within log messages:
 
   ```http
-  POST /application_logs-*/_search // Birden fazla log index'inde arama
+  POST /application_logs-*/_search // Search across multiple log indices
   {
     "query": {
       "match": {
@@ -106,8 +106,8 @@ Bu sorgular, metin alanlarında analiz edilmiş (token'lara ayrılmış) içerik
   }
   ```
 
-* **`match_phrase` Sorgusu: Kelime Grubunu Tam Olarak Arama**
-  Verilen kelimelerin aynı sırada ve birbirine yakın geçmesini bekler.
+* **`match_phrase` Query: Exact Phrase Matching**
+  Expects the given words to appear in the same order and close to each other.
 
   ```http
   POST /products/_search
@@ -120,10 +120,10 @@ Bu sorgular, metin alanlarında analiz edilmiş (token'lara ayrılmış) içerik
   }
   ```
 
-  * `slop`: Kelimeler arasında izin verilen maksimum ekstra kelime sayısını belirtir. `slop: 1` ile "Awesome Super Laptop" da eşleşebilir.
+  * `slop`: Specifies the maximum number of extra words allowed between the words in the phrase. With `slop: 1`, "Awesome Super Laptop" could also match.
 
-* **`multi_match` Sorgusu: Birden Fazla Alanda Arama**
-  Aynı arama terimini birden fazla alanda aramak için kullanılır.
+* **`multi_match` Query: Searching in Multiple Fields**
+  Used to search for the same term in multiple fields.
 
   ```http
   POST /products/_search
@@ -137,11 +137,11 @@ Bu sorgular, metin alanlarında analiz edilmiş (token'lara ayrılmış) içerik
   }
   ```
 
-  * `fields` alanına `*` veya `*_name` gibi wildcard'lar da verebilirsiniz. Alanlara farklı ağırlıklar (`^3` gibi) vererek skorlamayı etkileyebilirsiniz.
-  * `type`: `best_fields` (varsayılan, en iyi eşleşen alana göre skorlar), `most_fields` (daha fazla alanda eşleşen daha iyi skor alır), `cross_fields` (alanları tek bir büyük alan gibi düşünür, yapısal veriler için) gibi farklı eşleşme stratejileri sunar.
+  * You can also use wildcards like `*` or `*_name` in the `fields` array. You can influence scoring by giving different weights to fields (e.g., `^3`).
+  * `type`: Offers different matching strategies like `best_fields` (default, scores based on the best matching field), `most_fields` (matching in more fields gets a better score), `cross_fields` (treats fields as one large field, for structured data).
 
-* **`query_string` / `simple_query_string` Sorgusu:**
-  Lucene'in güçlü sorgu sentaksını (AND, OR, NOT, wildcard'lar, aralıklar vb.) doğrudan kullanmanızı sağlar.
+* **`query_string` / `simple_query_string` Query:**
+  Allows you to use Lucene's powerful query syntax directly (AND, OR, NOT, wildcards, ranges, etc.).
 
   ```http
   POST /products/_search
@@ -155,56 +155,56 @@ Bu sorgular, metin alanlarında analiz edilmiş (token'lara ayrılmış) içerik
   }
   ```
 
-  `query_string` çok güçlüdür ama kullanıcı girdisiyle doğrudan kullanılırsa sentaks hatalarına veya güvenlik açıklarına yol açabilir. `simple_query_string` daha güvenli bir alternatifidir, hatalı sentaksı görmezden gelir.
+  `query_string` is very powerful but can lead to syntax errors or security vulnerabilities if used directly with user input. `simple_query_string` is a safer alternative; it ignores invalid syntax.
 
-### 3.2.2 Term-Level Sorguları (Genellikle Filter Context'te)
+### 3.2.2 Term-Level Queries (Usually in Filter Context)
 
-Bu sorgular, analiz edilmemiş (olduğu gibi saklanmış) değerler üzerinde **birebir eşleşme** arar. Genellikle `keyword`, sayısal, tarih ve `boolean` alanları için kullanılırlar. Filter context'te kullanıldıklarında skorlamaya dahil olmazlar ve cache'lenebilirler.
+These queries search for **exact matches** on unanalyzed (stored as-is) values. They are typically used for `keyword`, numeric, date, and `boolean` fields. When used in the filter context, they are not included in scoring and can be cached.
 
-* **`term` Sorgusu: Tek Bir Değerle Birebir Eşleşme**
-  Verilen değerin alanda tam olarak bulunup bulunmadığını kontrol eder.
+* **`term` Query: Exact Match for a Single Value**
+  Checks if the given value is found exactly in the field.
 
   ```http
   POST /products/_search
   {
     "query": {
       "term": {
-        "category": "Accessories" // category alanı keyword olmalı
+        "category": "Accessories" // category field should be keyword
       }
     }
   }
   ```
 
-  **Dikkat:** `term` sorgusunu `text` alanında kullanırsanız, aradığınız kelimenin analiz sürecinden sonra oluşan token ile tam olarak eşleşmesi gerekir (genellikle küçük harf). "Accessories" yerine "accessories" aramanız gerekebilir. Bu yüzden `text` alanları için `match` daha uygundur.
+  **Caution:** If you use the `term` query on a `text` field, the word you are searching for must exactly match the token produced after the analysis process (usually lowercase). You might need to search for "accessories" instead of "Accessories". That's why `match` is more suitable for `text` fields.
 
-  Belirli bir log seviyesindeki kayıtları bulmak için:
+  To find records with a specific log level:
 
   ```http
   POST /application_logs-*/_search
   {
     "query": {
       "term": {
-        "level": "ERROR" // level alanı keyword olmalı
+        "level": "ERROR" // level field should be keyword
       }
     }
   }
   ```
 
-* **`terms` Sorgusu: Birden Fazla Değerle Eşleşme (`IN` gibi)**
-  Alanda belirtilen değerlerden herhangi birinin bulunup bulunmadığını kontrol eder.
+* **`terms` Query: Matching Multiple Values (like `IN`)**
+  Checks if any of the specified values are found in the field.
 
   ```http
   POST /products/_search
   {
     "query": {
       "terms": {
-        "tags": ["laptop", "gaming", "new-gen"] // tags alanı keyword olmalı
+        "tags": ["laptop", "gaming", "new-gen"] // tags field should be keyword
       }
     }
   }
   ```
 
-* **`ids` Sorgusu: Belirli ID'lere Sahip Dokümanları Getirme**
+* **`ids` Query: Fetching Documents with Specific IDs**
 
   ```http
   POST /products/_search
@@ -217,8 +217,8 @@ Bu sorgular, analiz edilmemiş (olduğu gibi saklanmış) değerler üzerinde **
   }
   ```
 
-* **`range` Sorgusu: Belirli Bir Aralıktaki Değerler**
-  Sayısal, tarih veya string alanlarında belirli bir aralıktaki değerleri bulur.
+* **`range` Query: Values within a Specific Range**
+  Finds values within a specific range in numeric, date, or string fields.
 
   ```http
   POST /products/_search
@@ -226,17 +226,17 @@ Bu sorgular, analiz edilmemiş (olduğu gibi saklanmış) değerler üzerinde **
     "query": {
       "range": {
         "price": {
-          "gte": 70,     // greater than or equal to (büyük veya eşit)
-          "lt": 500      // less than (küçük)
+          "gte": 70,     // greater than or equal to
+          "lt": 500      // less than
         }
       }
     }
   }
   ```
 
-  Diğer operatörler: `gt` (büyük), `lte` (küçük veya eşit). Tarihler için `now-1d/d` (dünden bugüne) gibi ifadeler de kullanılabilir.
+  Other operators: `gt` (greater than), `lte` (less than or equal to). For dates, expressions like `now-1d/d` (from yesterday to today) can also be used.
 
-  Loglar için zaman aralığında arama yapmak çok yaygındır:
+  Searching logs within a time range is very common:
 
   ```http
   POST /application_logs-*/_search
@@ -253,8 +253,8 @@ Bu sorgular, analiz edilmemiş (olduğu gibi saklanmış) değerler üzerinde **
   }
   ```
 
-* **`exists` Sorgusu: Alanın Var Olup Olmadığı**
-  Belirli bir alanın dokümanda var olup olmadığını (null veya boş dizi olmaması) kontrol eder.
+* **`exists` Query: Whether a Field Exists**
+  Checks if a specific field exists in the document (not null or an empty array).
 
   ```http
   POST /products/_search
@@ -267,8 +267,8 @@ Bu sorgular, analiz edilmemiş (olduğu gibi saklanmış) değerler üzerinde **
   }
   ```
 
-* **`prefix` Sorgusu: Belirli Bir Önekle Başlayanlar**
-  `keyword` alanlarında belirli bir önekle başlayan değerleri bulur.
+* **`prefix` Query: Starts with a Specific Prefix**
+  Finds values in `keyword` fields that start with a specific prefix.
 
   ```http
   POST /products/_search
@@ -281,15 +281,15 @@ Bu sorgular, analiz edilmemiş (olduğu gibi saklanmış) değerler üzerinde **
   }
   ```
 
-* **`wildcard` Sorgusu: Joker Karakterlerle Desen Eşleştirme**
-  `*` (birden fazla karakter) ve `?` (tek karakter) jokerlerini kullanarak desen eşleştirmesi yapar.
+* **`wildcard` Query: Pattern Matching with Wildcards**
+  Performs pattern matching using `*` (multiple characters) and `?` (single character) wildcards.
 
   ```http
   POST /products/_search
   {
     "query": {
       "wildcard": {
-        "name.keyword": { // Genellikle .keyword alanında kullanılır
+        "name.keyword": { // Usually used on .keyword field
           "value": "Lap*Pro"
         }
       }
@@ -297,12 +297,12 @@ Bu sorgular, analiz edilmemiş (olduğu gibi saklanmış) değerler üzerinde **
   }
   ```
 
-  **Performans Uyarısı:** `wildcard` ve `prefix` sorguları (özellikle başta `*` veya `?` ile başlayanlar) yavaş olabilir. Dikkatli kullanılmalıdır.
+  **Performance Warning:** `wildcard` and `prefix` queries (especially those starting with `*` or `?`) can be slow. They should be used cautiously.
 
-### 3.2.3 Diğer Kullanışlı Sorgular
+### 3.2.3 Other Useful Queries
 
-* **`match_all` Sorgusu: Tüm Dokümanları Getir**
-  Herhangi bir filtreleme yapmadan index'teki tüm dokümanları getirir.
+* **`match_all` Query: Get All Documents**
+  Retrieves all documents in the index without any filtering.
 
   ```http
   POST /products/_search
@@ -313,23 +313,23 @@ Bu sorgular, analiz edilmemiş (olduğu gibi saklanmış) değerler üzerinde **
   }
   ```
 
-* **`match_none` Sorgusu: Hiçbir Dokümanı Getirme**
-  Hiçbir dokümanı getirmez. Nadiren kullanılır.
+* **`match_none` Query: Get No Documents**
+  Retrieves no documents. Rarely used.
 
-## 3.3 Sorguları Birleştirme Sanatı: `bool` Sorgusu
+## 3.3 The Art of Combining Queries: The `bool` Query
 
-Gerçek dünya senaryolarında genellikle birden fazla koşulu birleştirerek arama yaparız. İşte bu noktada `bool` (boolean) sorgusu devreye girer. `bool` sorgusu, diğer sorgu tiplerini mantıksal operatörlerle (`AND`, `OR`, `NOT`) birleştirmemizi sağlar ve Query DSL'in en temel yapı taşlarından biridir.
+In real-world scenarios, we usually search by combining multiple conditions. This is where the `bool` (boolean) query comes into play. The `bool` query allows us to combine other query types with logical operators (`AND`, `OR`, `NOT`) and is one of the most fundamental building blocks of Query DSL.
 
-`bool` sorgusunun dört ana bölümü vardır:
+The `bool` query has four main clauses:
 
-* **`must`:** Bu bölümdeki tüm sorgular eşleşmelidir (lojik `AND`). Eşleşen dokümanların skoruna katkıda bulunur.
-* **`filter`:** Bu bölümdeki tüm sorgular eşleşmelidir (lojik `AND`). Ancak, filter context'te çalışır, yani skorlamaya dahil olmaz ve cache'lenebilir. Performans için idealdir.
-* **`should`:** Bu bölümdeki sorgulardan en az biri eşleşmelidir (lojik `OR`). Eşleşen dokümanların skoruna katkıda bulunur. Eğer `must` veya `filter` yoksa, `should` içindeki en az bir koşulun sağlanması gerekir.
-  * `minimum_should_match`: `should` bölümünde en az kaç koşulun sağlanması gerektiğini belirtir (örneğin, `1`, `2`, `"75%"`).
-* **`must_not`:** Bu bölümdeki hiçbir sorgu eşleşmemelidir (lojik `NOT`). Filter context'te çalışır, skorlamaya dahil olmaz.
+* **`must`:** All queries in this clause must match (logical `AND`). Contributes to the score of matching documents.
+* **`filter`:** All queries in this clause must match (logical `AND`). However, it operates in the filter context, meaning it's not included in scoring and can be cached. Ideal for performance.
+* **`should`:** At least one of the queries in this clause should match (logical `OR`). Contributes to the score of matching documents. If there is no `must` or `filter`, at least one condition in `should` must be met.
+  * `minimum_should_match`: Specifies the minimum number of `should` clauses that must match (e.g., `1`, `2`, `"75%"`).
+* **`must_not`:** None of the queries in this clause should match (logical `NOT`). Operates in the filter context, not included in scoring.
 
-**Örnek bir `bool` sorgusu (Ürünler için):**
-"Kategorisi 'Accessories' olan (filter), adında veya açıklamasında 'gaming keyboard' geçen (query) VE fiyatı 100'den az olan (filter) AMA etiketlerinde 'refurbished' geçmeyen (must_not) ürünleri bul."
+**Example `bool` query (for Products):**
+"Find products that are in the 'Accessories' category (filter), whose name or description contains 'gaming keyboard' (query) AND whose price is less than 100 (filter) BUT do not have 'refurbished' in their tags (must_not)."
 
 ```http
 POST /products/_search
@@ -359,10 +359,10 @@ POST /products/_search
 }
 ```
 
-`bool` sorguları iç içe de kullanılabilir, bu da çok karmaşık arama mantıkları oluşturmanıza olanak tanır. "Sorguların efendisi" desek yeridir!
+`bool` queries can also be nested, allowing you to create very complex search logic. It's fair to call it the "master of queries"!
 
-**Örnek bir `bool` sorgusu (Loglar için):**
-"'payment-service' servisinden gelen, 'ERROR' seviyesindeki VE mesajında 'database' kelimesi geçen logları bul."
+**Example `bool` query (for Logs):**
+"Find logs from the 'payment-service' that are at 'ERROR' level AND contain the word 'database' in the message."
 
 ```http
 POST /application_logs-*/_search
@@ -381,13 +381,13 @@ POST /application_logs-*/_search
 }
 ```
 
-Tüm bu sorgu tipleri ve `bool` sorgusu hakkında daha fazla örnek ve detay için [Elasticsearch Query DSL Dokümantasyonu'na](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html) mutlaka göz atın.
+For more examples and details on all these query types and the `bool` query, be sure to check out the [Elasticsearch Query DSL Documentation](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html).
 
-## 3.4 Pratik Zamanı: `products` Index'inde Arama Yapalım!
+## 3.4 Practice Time: Let's Search the `products` Index!
 
-Haydi, Kibana Dev Tools'u açıp `products` index'imizde öğrendiğimiz sorguları deneyelim!
+Alright, let's open Kibana Dev Tools and try out the queries we've learned on our `products` index!
 
-1. **Adında "Laptop" geçen ve fiyatı 1000'den büyük olan ürünler:**
+1. **Products with "Laptop" in the name and price greater than 1000:**
 
     ```http
     POST /products/_search
@@ -405,7 +405,7 @@ Haydi, Kibana Dev Tools'u açıp `products` index'imizde öğrendiğimiz sorgula
     }
     ```
 
-2. **Kategorisi "Accessories" VEYA "Monitors" olan, stokta bulunan (stock_quantity > 0) ürünler:**
+2. **Products in the "Accessories" OR "Monitors" category, that are in stock (stock_quantity > 0):**
 
     ```http
     POST /products/_search
@@ -425,7 +425,7 @@ Haydi, Kibana Dev Tools'u açıp `products` index'imizde öğrendiğimiz sorgula
     }
     ```
 
-3. **Açıklamasında "latest features" geçen AMA "gaming" etiketi olmayan ürünler:**
+3. **Products with "latest features" in the description BUT without the "gaming" tag:**
 
     ```http
     POST /products/_search
@@ -443,13 +443,13 @@ Haydi, Kibana Dev Tools'u açıp `products` index'imizde öğrendiğimiz sorgula
     }
     ```
 
-Bu örnekleri çoğaltmak mümkün. Kendi senaryolarınızı düşünerek farklı sorgular yazmayı deneyin. Query DSL'de ustalaşmanın en iyi yolu pratik yapmaktır!
+It's possible to multiply these examples. Try writing different queries by thinking about your own scenarios. The best way to master Query DSL is to practice!
 
-## 3.5 Pratik Zamanı: `application_logs` Index'inde Arama Yapalım!
+## 3.5 Practice Time: Let's Search the `application_logs` Index!
 
-Şimdi de log verilerimiz üzerinde bazı aramalar yapalım.
+Now let's do some searches on our log data.
 
-1. **"WARN" seviyesindeki tüm logları bulun:**
+1. **Find all logs at "WARN" level:**
 
     ```http
     POST /application_logs-*/_search
@@ -462,7 +462,7 @@ Bu örnekleri çoğaltmak mümkün. Kendi senaryolarınızı düşünerek farkl�
     }
     ```
 
-2. **Belirli bir zaman aralığındaki (örneğin, son 1 saat) "ERROR" loglarını bulun:**
+2. **Find "ERROR" logs within a specific time range (e.g., last 1 hour):**
 
     ```http
     POST /application_logs-*/_search
@@ -486,7 +486,7 @@ Bu örnekleri çoğaltmak mümkün. Kendi senaryolarınızı düşünerek farkl�
     }
     ```
 
-3. **Mesajında "failed" kelimesi geçen ve "auth-service" veya "payment-service" tarafından üretilen loglar:**
+3. **Logs containing the word "failed" in the message and generated by "auth-service" or "payment-service":**
 
     ```http
     POST /application_logs-*/_search
@@ -504,6 +504,9 @@ Bu örnekleri çoğaltmak mümkün. Kendi senaryolarınızı düşünerek farkl�
     }
     ```
 
-Log verileriyle çalışırken zaman aralıkları, log seviyeleri ve belirli anahtar kelimeler üzerinden filtreleme yapmak çok yaygındır. Bu örnekler size bir başlangıç noktası sunacaktır.
+When working with log data, filtering by time ranges, log levels, and specific keywords is very common. These examples will give you a starting point.
 
-Bir sonraki bölümde, arama sonuçlarını nasıl yöneteceğimizi (sayfalama, sıralama) ve Elasticsearch'ün güçlü analiz yeteneği olan Aggregation'ları keşfedeceğiz.
+In the next chapter, we'll explore how to manage search results (paging, sorting) and Elasticsearch's powerful analysis capability: Aggregations.
+
+---
+[<- Previous Section: Section 02](Section02.md) | [Next Section: Section 04 ->](Section04.md)

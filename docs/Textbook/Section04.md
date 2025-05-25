@@ -1,19 +1,19 @@
-# Bölüm 4: Analizin Gücü: Aggregation'larla Veriye Hükmetmek
+# Chapter 4: The Power of Analysis: Mastering Data with Aggregations
 
-Elasticsearch sadece veri bulmakla kalmaz, aynı zamanda bu veriyi anlamlandırmak, özetlemek ve içgörüler çıkarmak için de inanılmaz güçlü araçlara sahiptir. İşte bu araçların en önemlisi **Aggregation API**'sidir. SQL'deki `GROUP BY` ve aggregate fonksiyonlarının (SUM, COUNT, AVG vb.) çok daha esnek ve güçlü bir versiyonu gibi düşünebilirsiniz. "Veri konuşsun, biz dinleyelim" felsefesiyle, aggregation'lar sayesinde verilerinizin sakladığı hikayeleri ortaya çıkaracağız.
+Elasticsearch not only finds data but also has incredibly powerful tools to make sense of this data, summarize it, and extract insights. The most important of these tools is the **Aggregation API**. You can think of it as a much more flexible and powerful version of SQL's `GROUP BY` and aggregate functions (SUM, COUNT, AVG, etc.). With the philosophy "Let the data speak, we listen," we will uncover the stories hidden in your data using aggregations.
 
-## 4.1 Aggregation'lara Giriş: Nedir, Ne İşe Yarar?
+## 4.1 Introduction to Aggregations: What Are They, What Do They Do?
 
-Aggregation'lar, arama sonuçlarınızdaki dokümanları gruplara ayırmanıza (bucket'lama) ve bu gruplar üzerinde çeşitli metrikler (hesaplamalar) yapmanıza olanak tanır. Örneğin:
+Aggregations allow you to divide documents in your search results into groups (bucketing) and perform various metrics (calculations) on these groups. For example:
 
-* Her kategoride kaç ürün var?
-* En popüler etiketler hangileri?
-* Belirli bir fiyat aralığındaki ürünlerin ortalama stok miktarı nedir?
-* Aylık satış trendleri nasıl?
-* Hangi servis en çok hata logu üretiyor?
-* Günün hangi saatlerinde hata yoğunluğu artıyor?
+* How many products are in each category?
+* Which are the most popular tags?
+* What is the average stock quantity of products in a specific price range?
+* What are the monthly sales trends?
+* Which service generates the most error logs?
+* At what times of the day does error density increase?
 
-Bu tür soruların cevaplarını aggregation'lar ile kolayca bulabiliriz. Aggregation'lar, `_search` endpoint'ine gönderilen sorgunun `aggs` (veya `aggregations`) anahtarı altında tanımlanır.
+We can easily find the answers to such questions with aggregations. Aggregations are defined under the `aggs` (or `aggregations`) key of the query sent to the `_search` endpoint.
 
 ```http
 POST /products/_search
@@ -23,195 +23,195 @@ POST /products/_search
   },
   "aggs": {
     "my_first_aggregation": {
-      // Aggregation tanımı buraya gelecek
+      // Aggregation definition will go here
     }
   },
   "size": 0
 }
 ```
 
-`"my_first_aggregation"` kısmı, aggregation sonucunun cevapta hangi isimle döneceğini belirler. İstediğiniz bir ismi verebilirsiniz.
+The `"my_first_aggregation"` part determines the name under which the aggregation result will be returned in the response. You can give it any name you want.
 
-Aggregation'lar temel olarak iki ana kategoriye ayrılır:
+Aggregations are basically divided into two main categories:
 
-1. **Bucket Aggregations:** Dokümanları belirli kriterlere göre gruplara (bucket'lara) ayırır. Her bucket, o kritere uyan dokümanları içerir.
-2. **Metric Aggregations:** Bucket'lardaki (veya tüm sonuç setindeki) dokümanlar üzerinde sayısal hesaplamalar yapar (toplam, ortalama, min, max vb.).
+1.  **Bucket Aggregations:** Divides documents into groups (buckets) based on specific criteria. Each bucket contains documents that match that criterion.
+2.  **Metric Aggregations:** Performs numerical calculations (sum, average, min, max, etc.) on documents in buckets (or in the entire result set).
 
-Bu iki tür genellikle iç içe kullanılır: Önce bucket'lara ayırır, sonra her bucket için metrik hesaplarız.
+These two types are often used nested: first, we divide into buckets, then we calculate metrics for each bucket.
 
-## 4.2 Bucket Aggregations: Veriyi Anlamlı Gruplara Ayırmak
+## 4.2 Bucket Aggregations: Dividing Data into Meaningful Groups
 
-En sık kullanılan bucket aggregation'larına bir göz atalım:
+Let's take a look at the most commonly used bucket aggregations:
 
-* **`terms` Aggregation: Benzersiz Değerlere Göre Gruplama**
-  Belirli bir alandaki benzersiz değerlere göre dokümanları gruplar. SQL'deki `GROUP BY some_field` gibi.
-  Örnek: Her kategoride kaç ürün olduğunu bulalım.
+*   **`terms` Aggregation: Grouping by Unique Values**
+    Groups documents based on unique values in a specific field. Like `GROUP BY some_field` in SQL.
+    Example: Let's find out how many products are in each category.
 
-  ```http
-  POST /products/_search
-  {
-    "aggs": {
-      "products_by_category": {
-        "terms": { "field": "category" }
-      }
-    },
-    "size": 0
-  }
-  ```
-
-  Cevapta, her bir kategori için bir bucket ve o bucket'taki doküman sayısı (`doc_count`) gelir.
-  * `size`: Kaç tane bucket döneceğini belirler (varsayılan 10).
-  * `order`: Bucket'ların neye göre sıralanacağını belirtir (ör: `{"_count": "desc"}` doküman sayısına göre çoktan aza).
-
-* **`range` / `date_range` Aggregation: Belirli Aralıklara Göre Gruplama**
-  Sayısal veya tarih alanlarında sizin tanımladığınız aralıklara göre gruplama yapar.
-  Örnek: Fiyat aralıklarına göre ürün sayıları.
-
-  ```http
-  POST /products/_search
-  {
-    "aggs": {
-      "products_by_price_range": {
-        "range": {
-          "field": "price",
-          "ranges": [
-            { "to": 100.0 },
-            { "from": 100.0, "to": 500.0 },
-            { "from": 500.0 }
-          ]
+    ```http
+    POST /products/_search
+    {
+      "aggs": {
+        "products_by_category": {
+          "terms": { "field": "category" }
         }
-      }
-    },
-    "size": 0
-  }
-  ```
+      },
+      "size": 0
+    }
+    ```
 
-  `date_range` da benzer şekilde tarih aralıkları için kullanılır (`format` ve `time_zone` parametreleri önemlidir).
+    In the response, a bucket for each category and the number of documents in that bucket (`doc_count`) will be returned.
+    *   `size`: Determines how many buckets will be returned (default is 10).
+    *   `order`: Specifies how the buckets will be sorted (e.g., `{"_count": "desc"}` by document count descending).
 
-* **`histogram` / `date_histogram` Aggregation: Sabit Aralıklara Göre Gruplama**
-  Sayısal veya tarih alanlarında sabit bir aralığa (`interval`) göre bucket'lar oluşturur.
-  Örnek: Ürün fiyatlarının 500'lük aralıklarla dağılımı.
+*   **`range` / `date_range` Aggregation: Grouping by Specific Ranges**
+    Groups by ranges you define in numeric or date fields.
+    Example: Product counts by price ranges.
 
-  ```http
-  POST /products/_search
-  {
-    "aggs": {
-      "products_by_price_histogram": {
-        "histogram": {
-          "field": "price",
-          "interval": 500,
-          "min_doc_count": 1
-        }
-      }
-    },
-    "size": 0
-  }
-  ```
-
-  `date_histogram` için `interval` değeri `day`, `week`, `month`, `1d`, `7d`, `1M` gibi zaman birimleri olabilir. Log analizi ve zaman serisi verileri için çok kullanışlıdır.
-  Örnek: Saatlik log sayıları.
-
-  ```http
-  POST /application_logs-*/_search
-  {
-    "aggs": {
-      "logs_over_time": {
-        "date_histogram": {
-          "field": "@timestamp",
-          "calendar_interval": "1h",
-          "time_zone": "Europe/Istanbul"
-        }
-      }
-    },
-    "size": 0
-  }
-  ```
-
-* **`filter` / `filters` Aggregation: Filtreye Uyanları Gruplama**
-  `filter` tek bir filtreye uyan dokümanları tek bir bucket'a koyar. `filters` ise birden fazla isimlendirilmiş filtre tanımlamanızı ve her birine uyanları ayrı bucket'lara koymanızı sağlar.
-  Örnek: Stokta olan ve olmayan ürün sayıları.
-
-  ```http
-  POST /products/_search
-  {
-    "aggs": {
-      "stock_status_split": {
-        "filters": {
-          "filters": {
-            "in_stock_products": { "term": { "is_active": true } },
-            "out_of_stock_products": { "term": { "is_active": false } }
+    ```http
+    POST /products/_search
+    {
+      "aggs": {
+        "products_by_price_range": {
+          "range": {
+            "field": "price",
+            "ranges": [
+              { "to": 100.0 },
+              { "from": 100.0, "to": 500.0 },
+              { "from": 500.0 }
+            ]
           }
         }
-      }
-    },
-    "size": 0
-  }
-  ```
-
-## 4.3 Metric Aggregations: Gruplar Üzerinde Hesaplamalar Yapmak
-
-Bucket'larımızı oluşturduktan sonra, bu bucket'lardaki (veya tüm sonuç setindeki) veriler üzerinde çeşitli hesaplamalar yapabiliriz.
-
-* **`min`, `max`, `avg`, `sum` Aggregations: Temel İstatistikler**
-  Belirli bir sayısal alanın minimum, maksimum, ortalama veya toplam değerini hesaplar.
-  Örnek: Tüm ürünlerin ortalama fiyatı.
-
-  ```http
-  POST /products/_search
-  {
-    "aggs": {
-      "average_price": {
-        "avg": { "field": "price" }
       },
-      "total_stock": {
-          "sum": { "field": "stock_quantity"}
-      }
-    },
-    "size": 0
-  }
-  ```
+      "size": 0
+    }
+    ```
 
-* **`stats` / `extended_stats` Aggregations: Kapsamlı İstatistikler**
-  `stats`, tek seferde `count`, `min`, `max`, `avg`, `sum` değerlerini verir. `extended_stats` ise bunlara ek olarak `sum_of_squares`, `variance`, `std_deviation` (standart sapma) gibi daha ileri istatistikleri de sunar.
+    `date_range` is used similarly for date ranges (`format` and `time_zone` parameters are important).
 
-  ```http
-  POST /products/_search
-  {
-    "aggs": {
-      "price_stats": {
-        "stats": { "field": "price" }
-      }
-    },
-    "size": 0
-  }
-  ```
+*   **`histogram` / `date_histogram` Aggregation: Grouping by Fixed Intervals**
+    Creates buckets based on a fixed interval (`interval`) in numeric or date fields.
+    Example: Distribution of product prices in intervals of 500.
 
-* **`cardinality` Aggregation: Benzersiz Değer Sayısı (Yaklaşık)**
-  Belirli bir alandaki benzersiz değer sayısını tahmin eder. SQL'deki `COUNT(DISTINCT field)` gibi. Büyük veri setlerinde tam sayım pahalı olabileceği için HyperLogLog++ algoritmasını kullanarak yaklaşık ama hızlı bir sonuç verir.
-  Örnek: Kaç farklı kategori var?
+    ```http
+    POST /products/_search
+    {
+      "aggs": {
+        "products_by_price_histogram": {
+          "histogram": {
+            "field": "price",
+            "interval": 500,
+            "min_doc_count": 1
+          }
+        }
+      },
+      "size": 0
+    }
+    ```
 
-  ```http
-  POST /products/_search
-  {
-    "aggs": {
-      "distinct_categories": {
-        "cardinality": { "field": "category" }
-      }
-    },
-    "size": 0
-  }
-  ```
+    For `date_histogram`, the `interval` value can be time units like `day`, `week`, `month`, `1d`, `7d`, `1M`. Very useful for log analysis and time series data.
+    Example: Hourly log counts.
 
-  `precision_threshold` parametresi ile doğruluk ve performans arasında denge kurulabilir.
+    ```http
+    POST /application_logs-*/_search
+    {
+      "aggs": {
+        "logs_over_time": {
+          "date_histogram": {
+            "field": "@timestamp",
+            "calendar_interval": "1h",
+            "time_zone": "Europe/Istanbul"
+          }
+        }
+      },
+      "size": 0
+    }
+    ```
 
-* **`percentiles` / `percentile_ranks` Aggregations: Yüzdelik Dilimler**
-    `percentiles`, verinin belirli yüzdelik dilimlerini (örneğin, %50 (medyan), %95, %99) gösterir. `percentile_ranks` ise belirli değerlerin hangi yüzdelik dilime denk geldiğini gösterir. Performans izleme (örneğin, isteklerin %99'u kaç ms altında tamamlanıyor?) için çok kullanışlıdır.
+*   **`filter` / `filters` Aggregation: Grouping Those That Match a Filter**
+    `filter` puts documents matching a single filter into a single bucket. `filters` allows you to define multiple named filters and put those matching each into separate buckets.
+    Example: Number of in-stock and out-of-stock products.
 
-## 4.4 İç İçe Aggregation'lar: Detayın Detayına İnmek
+    ```http
+    POST /products/_search
+    {
+      "aggs": {
+        "stock_status_split": {
+          "filters": {
+            "filters": {
+              "in_stock_products": { "term": { "is_active": true } },
+              "out_of_stock_products": { "term": { "is_active": false } }
+            }
+          }
+        }
+      },
+      "size": 0
+    }
+    ```
 
-Aggregation'ların asıl gücü, iç içe kullanılabilmelerinden gelir. Bir bucket aggregation'ın altına başka bir bucket veya metric aggregation ekleyerek çok daha detaylı analizler yapabiliriz.
+## 4.3 Metric Aggregations: Performing Calculations on Groups
 
-Örnek (Ürünler için): Her bir kategorideki (`terms` bucket) ürünlerin ortalama fiyatını (`avg` metric) bulalım.
+After creating our buckets, we can perform various calculations on the data in these buckets (or in the entire result set).
+
+*   **`min`, `max`, `avg`, `sum` Aggregations: Basic Statistics**
+    Calculates the minimum, maximum, average, or total value of a specific numeric field.
+    Example: Average price of all products.
+
+    ```http
+    POST /products/_search
+    {
+      "aggs": {
+        "average_price": {
+          "avg": { "field": "price" }
+        },
+        "total_stock": {
+            "sum": { "field": "stock_quantity"}
+        }
+      },
+      "size": 0
+    }
+    ```
+
+*   **`stats` / `extended_stats` Aggregations: Comprehensive Statistics**
+    `stats` provides `count`, `min`, `max`, `avg`, `sum` values in one go. `extended_stats` additionally offers more advanced statistics like `sum_of_squares`, `variance`, `std_deviation` (standard deviation).
+
+    ```http
+    POST /products/_search
+    {
+      "aggs": {
+        "price_stats": {
+          "stats": { "field": "price" }
+        }
+      },
+      "size": 0
+    }
+    ```
+
+*   **`cardinality` Aggregation: Count of Unique Values (Approximate)**
+    Estimates the number of unique values in a specific field. Like `COUNT(DISTINCT field)` in SQL. Since exact counting can be expensive in large datasets, it uses the HyperLogLog++ algorithm to provide an approximate but fast result.
+    Example: How many different categories are there?
+
+    ```http
+    POST /products/_search
+    {
+      "aggs": {
+        "distinct_categories": {
+          "cardinality": { "field": "category" }
+        }
+      },
+      "size": 0
+    }
+    ```
+
+    The `precision_threshold` parameter can be used to balance accuracy and performance.
+
+*   **`percentiles` / `percentile_ranks` Aggregations: Percentiles**
+    `percentiles` shows specific percentiles of the data (e.g., 50th (median), 95th, 99th). `percentile_ranks` shows which percentile specific values correspond to. Very useful for performance monitoring (e.g., what percentage of requests complete under X ms?).
+
+## 4.4 Nested Aggregations: Delving into the Details of Details
+
+The real power of aggregations comes from their ability to be nested. We can perform much more detailed analyses by adding another bucket or metric aggregation under a bucket aggregation.
+
+Example (for Products): Let's find the average price (`avg` metric) of products in each category (`terms` bucket).
 
 ```http
 POST /products/_search
@@ -230,9 +230,9 @@ POST /products/_search
 }
 ```
 
-Cevapta, her kategori bucket'ının içinde o kategoriye ait ürünlerin ortalama fiyatı da gelecektir.
+In the response, the average price of products belonging to that category will also be included within each category bucket.
 
-Örnek (Loglar için): Her bir servis (`service_name`) için farklı log seviyelerindeki (`level`) log sayılarını bulalım.
+Example (for Logs): Let's find the number of logs at different log levels (`level`) for each service (`service_name`).
 
 ```http
 POST /application_logs-*/_search
@@ -251,13 +251,13 @@ POST /application_logs-*/_search
 }
 ```
 
-Bu iç içe yapıyı istediğiniz kadar derinleştirebilirsiniz (tabii performans implications'ı göz önünde bulundurarak).
+You can deepen this nested structure as much as you want (of course, keeping performance implications in mind).
 
-Aggregation'lar, Elasticsearch'ün sadece bir arama motoru olmadığını, aynı zamanda güçlü bir analitik platformu olduğunu gösteren en önemli özelliklerdendir. Tüm aggregation türleri ve seçenekleri için [Elasticsearch Aggregations Dokümantasyonu'na](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations.html) mutlaka detaylıca bakın.
+Aggregations are one of the most important features that show Elasticsearch is not just a search engine, but also a powerful analytical platform. Be sure to take a detailed look at the [Elasticsearch Aggregations Documentation](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-aggregations.html) for all aggregation types and options.
 
-## 4.5 Pratik Zamanı: `products` Verimizi Analiz Edelim!
+## 4.5 Practice Time: Let's Analyze Our `products` Data!
 
-1. **En çok ürüne sahip ilk 5 kategoriyi ve her kategorideki ürün sayısını bulun:**
+1.  **Find the top 5 categories with the most products and the number of products in each category:**
 
     ```http
     POST /products/_search
@@ -275,7 +275,7 @@ Aggregation'lar, Elasticsearch'ün sadece bir arama motoru olmadığını, aynı
     }
     ```
 
-2. **Tüm ürünlerin minimum, maksimum ve ortalama fiyatlarını bulun:**
+2.  **Find the minimum, maximum, and average prices of all products:**
 
     ```http
     POST /products/_search
@@ -289,7 +289,7 @@ Aggregation'lar, Elasticsearch'ün sadece bir arama motoru olmadığını, aynı
     }
     ```
 
-3. **Her bir etikete (`tags`) sahip ürün sayısını ve bu etiketlere sahip ürünlerin ortalama stok miktarını bulun:**
+3.  **Find the number of products with each tag (`tags`) and the average stock quantity of products with these tags:**
 
     ```http
     POST /products/_search
@@ -308,13 +308,13 @@ Aggregation'lar, Elasticsearch'ün sadece bir arama motoru olmadığını, aynı
     }
     ```
 
-Bu örnekler sadece bir başlangıç. Kendi verilerinize ve merak ettiğiniz sorulara göre çok daha karmaşık ve ilginç aggregation'lar oluşturabilirsiniz.
+These examples are just a starting point. You can create much more complex and interesting aggregations based on your own data and the questions you are curious about.
 
-## 4.6 Pratik Zamanı: `application_logs` Verimizi Analiz Edelim!
+## 4.6 Practice Time: Let's Analyze Our `application_logs` Data!
 
-Şimdi de log verilerimiz üzerinde bazı anlamlı analizler yapalım.
+Now let's do some meaningful analysis on our log data.
 
-1. **Her bir servis (`service_name`) için toplam log sayısını bulun:**
+1.  **Find the total number of logs for each service (`service_name`):**
 
     ```http
     POST /application_logs-*/_search
@@ -328,7 +328,7 @@ Bu örnekler sadece bir başlangıç. Kendi verilerinize ve merak ettiğiniz sor
     }
     ```
 
-2. **Son 24 saat içindeki saatlik "ERROR" seviyesindeki log sayılarını bulun:**
+2.  **Find the hourly counts of "ERROR" level logs within the last 24 hours:**
 
     ```http
     POST /application_logs-*/_search
@@ -354,7 +354,7 @@ Bu örnekler sadece bir başlangıç. Kendi verilerinize ve merak ettiğiniz sor
     }
     ```
 
-3. **En çok hata (`level: ERROR`) üreten ilk 5 host IP'sini (`host_ip`) bulun:**
+3.  **Find the top 5 host IPs (`host_ip`) generating the most errors (`level: ERROR`):**
 
     ```http
     POST /application_logs-*/_search
@@ -374,4 +374,7 @@ Bu örnekler sadece bir başlangıç. Kendi verilerinize ve merak ettiğiniz sor
     }
     ```
 
-Log verileri üzerinde yapılan aggregation'lar, sistem sağlığını izlemek, hataları tespit etmek ve performans darboğazlarını anlamak için paha biçilmezdir.
+Aggregations performed on log data are invaluable for monitoring system health, detecting errors, and understanding performance bottlenecks.
+
+---
+[<- Previous Section: Section 03](Section03.md) | [Next Section: Section 05 ->](Section05.md)

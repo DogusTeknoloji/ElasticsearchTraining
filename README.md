@@ -4,19 +4,23 @@
 [![.NET](https://img.shields.io/badge/.NET-9.0-512BD4.svg)](https://dotnet.microsoft.com/)
 [![Elasticsearch](https://img.shields.io/badge/Elasticsearch-8.13.4-005571.svg)](https://www.elastic.co/)
 
-> **Turkish:** Bu proje, şirket içi kıdemli full stack yazılım geliştiricilere yönelik kapsamlı bir Elasticsearch eğitimi için geliştirilmiş materyaller içerir.
+This repository contains comprehensive Elasticsearch training materials designed for developers, including a practical .NET 9.0 log simulator application for hands-on learning.
 
-This repository contains comprehensive Elasticsearch training materials designed for senior full-stack developers, including a practical .NET 9.0 log simulator application for hands-on learning.
+**Türkçe:** Bu proje, şirket içi yazılım geliştiricilere yönelik kapsamlı bir Elasticsearch eğitimi için geliştirilmiş materyaller ve pratik bir .NET 9.0 log simülatörü uygulaması içerir. Daha fazla Türkçe kaynak için aşağıdaki belgelere göz atın.
 
-## 📚 What's Included
+## 📚 What's Included (İçerik)
 
-- **Complete Training Curriculum** - 6-hour structured learning path with theoretical concepts and practical exercises
-- **Student Textbook** - Comprehensive guide in Turkish with English technical terms and code examples
-- **Practical Exercises** - HTTP request collections for hands-on practice
-- **.NET Log Simulator** - ASP.NET Core application that generates realistic log data for training scenarios
-- **Docker Environment** - Ready-to-use Elasticsearch and Kibana setup
+- **Complete Training Curriculum (Kapsamlı Eğitim Müfredatı)**
+  - English: [Lesson Plan](docs/Lesson-Plan.md) - Instructor guide with timing and detailed curriculum.
+  - Türkçe: [Ders Planı](docs/Lesson-Plan.tr.md) - Eğitmen kılavuzu, zamanlama ve detaylı müfredat.
+- **Student Textbook (Öğrenci Ders Kitabı)**
+  - English: [Textbook](docs/Textbook/Textbook.md) - Complete learning materials in modular format.
+  - Türkçe: [Ders Kitabı](docs/Textbook/Textbook.tr.md) - Modüler formatta eksiksiz öğrenim materyalleri.
+- **Practical Exercises (Pratik Uygulamalar)** - HTTP request collections for hands-on practice. ([HTTP Examples](docs/HttpRequests/))
+- **.NET Log Simulator (.NET Log Simülatörü)** - ASP.NET Core application that generates realistic log data for training scenarios.
+- **Docker Environment (Docker Ortamı)** - Ready-to-use Elasticsearch and Kibana setup.
 
-## 🎯 Features
+## 🎯 Features (Özellikler)
 
 - **Index Template Management** - Automatic creation of `application_logs` template with proper mappings
 - **Products Index Setup** - Pre-configured product data index for training exercises  
@@ -33,12 +37,12 @@ This repository contains comprehensive Elasticsearch training materials designed
 - 4GB+ RAM available for Elasticsearch
 - Web browser for Kibana access
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Hızlı Başlangıç)
 
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/ElasticsearchTraining.git
+git clone https://github.com/DogusTeknoloji/ElasticsearchTraining.git
 cd ElasticsearchTraining
 ```
 
@@ -60,24 +64,24 @@ Wait for services to be ready (usually 2-3 minutes). You can check:
 - Elasticsearch: <http://localhost:9200>
 - Kibana: <http://localhost:5601>
 
-### 3. Run the Training Application
+### 3. Run the Training Application (Eğitim Uygulamasını Çalıştırın)
 
 ```bash
-# Navigate to the application directory
+# Navigate to the application directory (Uygulama dizinine gidin)
 cd src/ElasticTraining
 
-# Restore dependencies
+# Restore dependencies (Bağımlılıkları yükleyin)
 dotnet restore
 
-# Run the application
+# Run the application (Uygulamayı çalıştırın)
 dotnet run
 ```
 
-The application will be available at: <https://localhost:5001>
+The application will be available at (Uygulama şu adreste mevcut olacaktır): <https://localhost:5001>
 
-## � Training Materials
+## 📖 Training Materials (Eğitim Materyalleri)
 
-### Course Structure
+### Course Structure (Ders Yapısı)
 
 The training is organized into 6 sections:
 
@@ -88,31 +92,35 @@ The training is organized into 6 sections:
 5. **Log Management** - Practical log analysis scenarios
 6. **Production Considerations** - Performance, monitoring, and best practices
 
-### Documentation
+### Documentation (Dokümantasyon)
 
-- **[Lesson Plan](docs/Lesson-Plan.md)** - Instructor guide with timing and detailed curriculum
-- **[Student Textbook](docs/Textbook/)** - Complete learning materials in modular format
-- **[HTTP Examples](docs/HttpRequests/)** - Ready-to-use request collections for practice
+- **Lesson Plan (Ders Planı):**
+  - English: [Lesson Plan](docs/Lesson-Plan.md)
+  - Türkçe: [Ders Planı](docs/Lesson-Plan.tr.md)
+- **Student Textbook (Öğrenci Ders Kitabı):**
+  - English: [Textbook](docs/Textbook/Textbook.md) (links to `Section0X.md` files)
+  - Türkçe: [Ders Kitabı](docs/Textbook/Textbook.tr.md) (links to `Section0X.tr.md` files)
+- **HTTP Examples (HTTP Örnekleri):** [HTTP Requests](docs/HttpRequests/) (Contains `.http` files for practice)
 
-## 💡 How to Use for Training
+## 💡 How to Use for Training (Eğitim İçin Nasıl Kullanılır)
 
-### For Instructors
+### For Instructors (Eğitmenler İçin)
 
-1. Review the [lesson plan](docs/Lesson-Plan.md) for structured 6-hour curriculum
-2. Start Elasticsearch and Kibana using Docker Compose
-3. Run the log simulator application
-4. Use provided HTTP request examples for demonstrations
-5. Guide students through hands-on exercises
+1. Review the lesson plans: [English Lesson Plan](docs/Lesson-Plan.md) or [Turkish Lesson Plan](docs/Lesson-Plan.tr.md).
+2. Start Elasticsearch and Kibana using Docker Compose.
+3. Run the log simulator application.
+4. Use provided [HTTP request examples](docs/HttpRequests/) for demonstrations.
+5. Guide students through hands-on exercises.
 
-### For Self-Learning
+### For Self-Learning (Bireysel Öğrenim İçin)
 
-1. Start with the [textbook materials](docs/Textbook/Textbook.md)
-2. Set up the environment using Docker Compose
-3. Work through practical exercises using the log simulator
-4. Practice with provided HTTP request collections
-5. Explore real-time data analysis with generated logs
+1. Start with the textbook materials: [English Textbook](docs/Textbook/Textbook.md) or [Turkish Textbook](docs/Textbook/Textbook.tr.md).
+2. Set up the environment using Docker Compose.
+3. Work through practical exercises using the log simulator.
+4. Practice with provided [HTTP request collections](docs/HttpRequests/).
+5. Explore real-time data analysis with generated logs.
 
-## 🔍 Training Scenarios
+## 🔍 Training Scenarios (Eğitim Senaryoları)
 
 ### Real-time Log Analysis
 
