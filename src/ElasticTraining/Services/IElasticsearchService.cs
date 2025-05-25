@@ -1,5 +1,3 @@
-using ElasticTraining.Models;
-
 namespace ElasticTraining.Services;
 
 public interface IElasticsearchService

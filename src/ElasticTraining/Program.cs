@@ -8,8 +8,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 
 // Elasticsearch Configuration
-var elasticsearchConfig = builder.Configuration.GetSection("Elasticsearch").Get<ElasticsearchConfiguration>() 
-                         ?? new ElasticsearchConfiguration();
+var elasticsearchConfig =
+    builder.Configuration.GetSection("Elasticsearch").Get<ElasticsearchConfiguration>()
+    ?? new ElasticsearchConfiguration();
 
 builder.Services.AddSingleton(elasticsearchConfig);
 
@@ -55,4 +56,4 @@ app.MapStaticAssets();
 app.MapRazorPages()
    .WithStaticAssets();
 
-app.Run();
+await app.RunAsync();

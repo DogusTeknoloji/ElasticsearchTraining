@@ -1,0 +1,174 @@
+# Bölüm 2: Veri Krallığınızı Kurun: Indexing ve Mapping
+# HTTP Request Örnekleri
+
+###
+# 2.1.1 Kendi ID'ni Belirleyerek Ekleme (PUT)
+PUT http://localhost:9200/products/_doc/1
+Content-Type: application/json
+
+{
+  "product_name": "Super Fast Laptop Pro",
+  "category": "Computers",
+  "price": 1299.99,
+  "in_stock": true,
+  "features": ["16GB RAM", "512GB SSD", "Next-Gen CPU"]
+}
+
+###
+# 2.1.1 Elasticsearch Otomatik ID Oluştursun (POST)
+POST http://localhost:9200/application_logs/_doc
+Content-Type: application/json
+
+{
+  "@timestamp": "2024-05-24T14:33:15.234Z",
+  "level": "ERROR",
+  "service_name": "payment-service",
+  "host_ip": "10.0.1.25",
+  "message": "Failed to process payment for order 12345: Connection timed out"
+}
+
+###
+# 2.1.2 Doküman Okuma (Get)
+GET http://localhost:9200/products/_doc/1
+
+###
+# 2.1.3 Kısmi Güncelleme (POST ile _update)
+POST http://localhost:9200/products/_update/1
+Content-Type: application/json
+
+{
+  "doc": {
+    "price": 1249.99,
+    "in_stock": true
+  }
+}
+
+###
+# 2.1.4 Doküman Silme (Delete)
+DELETE http://localhost:9200/products/_doc/1
+
+###
+# 2.2 _bulk API'si Örneği (hem ürün hem log)
+POST http://localhost:9200/_bulk
+Content-Type: application/json
+
+{ "index" : { "_index" : "products", "_id" : "SKU004" } }
+{ "product_name" : "Ergonomic Office Chair", "category" : "Furniture", "price": 299.00, "in_stock": true }
+{ "index" : { "_index" : "application_logs-2024-05-24" } }
+{ "@timestamp": "2024-05-24T15:01:00.000Z", "level": "INFO", "service_name": "user-service", "message": "User logged in: user@example.com" }
+{ "index" : { "_index" : "application_logs-2024-05-24" } }
+{ "@timestamp": "2024-05-24T15:01:05.123Z", "level": "WARN", "service_name": "user-service", "message": "Login attempt failed for unknown_user" }
+{ "delete" : { "_index" : "products", "_id" : "old_product_id" } }
+
+###
+# 2.3.2 Müşteri Verisi İçin Mapping
+PUT http://localhost:9200/customers
+Content-Type: application/json
+
+{
+  "mappings": {
+    "properties": {
+      "customer_id": { "type": "keyword" },
+      "full_name": {
+        "type": "text",
+        "analyzer": "standard",
+        "fields": {
+          "keyword": { "type": "keyword", "ignore_above": 256 }
+        }
+      },
+      "email": { "type": "keyword" },
+      "birth_date": { "type": "date", "format": "yyyy-MM-dd" },
+      "order_count": { "type": "integer" },
+      "last_login_date": { "type": "date" },
+      "is_active": { "type": "boolean" },
+      "address": {
+        "type": "object",
+        "properties": {
+          "city": { "type": "keyword" },
+          "postal_code": { "type": "keyword" }
+        }
+      }
+    }
+  }
+}
+
+###
+# 2.4 products Index'ini Explicit Mapping ile Oluşturma
+PUT http://localhost:9200/products
+Content-Type: application/json
+
+{
+  "mappings": {
+    "properties": {
+      "sku": { "type": "keyword" },
+      "name": {
+        "type": "text",
+        "analyzer": "english",
+        "fields": {
+          "keyword": { "type": "keyword" }
+        }
+      },
+      "description": { "type": "text", "analyzer": "english" },
+      "price": { "type": "scaled_float", "scaling_factor": 100 },
+      "stock_quantity": { "type": "integer" },
+      "category": { "type": "keyword" },
+      "tags": { "type": "keyword" },
+      "created_date": { "type": "date" },
+      "is_active": { "type": "boolean" }
+    }
+  }
+}
+
+###
+# 2.4 _bulk API'si ile Birkaç Ürün Ekleme
+POST http://localhost:9200/products/_bulk
+Content-Type: application/json
+
+{ "index": { "_id": "SKU001" } }
+{ "sku": "SKU001", "name": "Awesome Laptop Model Z", "description": "A powerful laptop with the latest features.", "price": 1399.99, "stock_quantity": 15, "category": "Computers", "tags": ["laptop", "new-gen", "gaming"], "created_date": "2024-05-20T10:00:00Z", "is_active": true }
+{ "index": { "_id": "SKU002" } }
+{ "sku": "SKU002", "name": "Super Silent Mechanical Keyboard", "description": "RGB backlit, long-lasting mechanical keyboard.", "price": 75.50, "stock_quantity": 45, "category": "Accessories", "tags": ["keyboard", "mechanical", "rgb"], "created_date": "2024-05-21T14:30:00Z", "is_active": true }
+{ "index": { "_id": "SKU003" } }
+{ "sku": "SKU003", "name": "Wide Screen Monitor", "description": "Ideal for professional use, 32 inch 4K monitor.", "price": 450.00, "stock_quantity": 0, "category": "Monitors", "tags": ["monitor", "4k", "professional"], "created_date": "2024-05-15T09:15:00Z", "is_active": false }
+
+###
+# 2.5 application_logs_template'i Oluşturma
+PUT http://localhost:9200/_index_template/application_logs_template
+Content-Type: application/json
+
+{
+  "index_patterns": ["application_logs-*"],
+  "template": {
+    "mappings": {
+      "properties": {
+        "@timestamp": { "type": "date" },
+        "level": { "type": "keyword" },
+        "service_name": { "type": "keyword" },
+        "host_ip": { "type": "ip" },
+        "thread_name": { "type": "keyword" },
+        "logger_name": { "type": "keyword" },
+        "message": {
+          "type": "text",
+          "analyzer": "standard"
+        },
+        "stack_trace": { "type": "text" },
+        "http_status_code": { "type": "integer" },
+        "response_time_ms": { "type": "long" }
+      }
+    }
+  }
+}
+
+###
+# 2.5 _bulk API'si ile Örnek Log Kayıtları Ekleme
+POST http://localhost:9200/_bulk
+Content-Type: application/json
+
+{ "index" : { "_index" : "application_logs-2024-05-24" } }
+{ "@timestamp": "2024-05-24T10:00:00.123Z", "level": "INFO", "service_name": "auth-service", "host_ip": "192.168.1.10", "message": "User 'alice' logged in successfully." }
+{ "index" : { "_index" : "application_logs-2024-05-24" } }
+{ "@timestamp": "2024-05-24T10:01:30.456Z", "level": "WARN", "service_name": "product-catalog", "host_ip": "192.168.1.11", "message": "Product SKU00X not found, returning 404." }
+{ "index" : { "_index" : "application_logs-2024-05-24" } }
+{ "@timestamp": "2024-05-24T10:02:15.789Z", "level": "ERROR", "service_name": "payment-service", "host_ip": "192.168.1.12", "message": "Database connection failed: timeout", "stack_trace": "java.net.SocketTimeoutException: connect timed out\n  at java.net.PlainSocketImpl.socketConnect(Native Method)\n  ..." }
+{ "index" : { "_index" : "application_logs-2024-05-24" } }
+{ "@timestamp": "2024-05-24T10:03:00.000Z", "level": "INFO", "service_name": "order-service", "host_ip": "192.168.1.10", "message": "Order ORD001 processed successfully.", "response_time_ms": 150 }

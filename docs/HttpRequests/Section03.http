@@ -1,0 +1,390 @@
+# Bölüm 3: Arama Sanatında Ustalaşın: Query DSL
+# HTTP Request Örnekleri
+
+###
+# 3.1 URI Search (GET ile Basit Aramalar)
+GET http://localhost:9200/products/_search?q=name:laptop
+
+###
+# 3.1 URI Search - Log Aramalar
+GET http://localhost:9200/application_logs-2024-05-24/_search?q=level:ERROR
+
+###
+# 3.2.1 Match Sorgusu - Standart Full-Text Arama
+POST http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match": {
+      "description": "powerful gaming laptop"
+    }
+  }
+}
+
+###
+# 3.2.1 Match Sorgusu - Operator: AND
+POST http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match": {
+      "description": {
+        "query": "powerful gaming laptop",
+        "operator": "AND"
+      }
+    }
+  }
+}
+
+###
+# 3.2.1 Match Sorgusu - Log Mesajlarında Arama
+POST http://localhost:9200/application_logs-*/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match": {
+      "message": "timeout"
+    }
+  }
+}
+
+###
+# 3.2.1 Match Phrase Sorgusu
+POST http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match_phrase": {
+      "name": "Awesome Laptop"
+    }
+  }
+}
+
+###
+# 3.2.1 Multi Match Sorgusu
+POST http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "multi_match": {
+      "query": "silent keyboard",
+      "fields": ["name", "description", "tags"]
+    }
+  }
+}
+
+###
+# 3.2.1 Query String Sorgusu
+POST http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "query_string": {
+      "query": "(laptop OR gaming) AND category:Computers AND price:>1000",
+      "default_field": "description"
+    }
+  }
+}
+
+###
+# 3.2.2 Term Sorgusu - Kategori Filtresi
+POST http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "term": {
+      "category": "Accessories"
+    }
+  }
+}
+
+###
+# 3.2.2 Term Sorgusu - Log Level Filtresi
+POST http://localhost:9200/application_logs-*/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "term": {
+      "level": "ERROR"
+    }
+  }
+}
+
+###
+# 3.2.2 Terms Sorgusu - Çoklu Etiket Filtresi
+POST http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "terms": {
+      "tags": ["laptop", "gaming", "new-gen"]
+    }
+  }
+}
+
+###
+# 3.2.2 IDs Sorgusu - Belirli ID'ler
+POST http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "ids": {
+      "values": ["SKU001", "SKU003"]
+    }
+  }
+}
+
+###
+# 3.2.2 Range Sorgusu - Fiyat Aralığı
+POST http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "range": {
+      "price": {
+        "gte": 70,
+        "lt": 500
+      }
+    }
+  }
+}
+
+###
+# 3.2.2 Range Sorgusu - Zaman Aralığı (Loglar)
+POST http://localhost:9200/application_logs-*/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "range": {
+      "@timestamp": {
+        "gte": "2024-05-24T10:00:00.000Z",
+        "lte": "2024-05-24T10:05:00.000Z",
+        "format": "strict_date_optional_time||epoch_millis"
+      }
+    }
+  }
+}
+
+###
+# 3.2.2 Exists Sorgusu - Alan Varlığı
+POST http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "exists": {
+      "field": "description"
+    }
+  }
+}
+
+###
+# 3.2.2 Prefix Sorgusu
+POST http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "prefix": {
+      "sku": "SKU"
+    }
+  }
+}
+
+###
+# 3.2.2 Wildcard Sorgusu
+POST http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "wildcard": {
+      "name.keyword": {
+        "value": "Lap*Pro"
+      }
+    }
+  }
+}
+
+###
+# 3.2.3 Match All Sorgusu
+POST http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
+###
+# 3.3 Bool Sorgusu - Ürün Örneği
+POST http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "multi_match": {
+            "query": "gaming keyboard",
+            "fields": ["name", "description"]
+          }
+        }
+      ],
+      "filter": [
+        { "term": { "category": "Accessories" } },
+        { "range": { "price": { "lt": 100 } } }
+      ],
+      "must_not": [
+        { "term": { "tags": "refurbished" } }
+      ],
+      "should": [
+        { "term": { "tags": "new-arrival" } }
+      ]
+    }
+  }
+}
+
+###
+# 3.3 Bool Sorgusu - Log Örneği
+POST http://localhost:9200/application_logs-*/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "bool": {
+      "filter": [
+        { "term": { "service_name": "payment-service" } },
+        { "term": { "level": "ERROR" } }
+      ],
+      "must": [
+        { "match": { "message": "database" } }
+      ]
+    }
+  }
+}
+
+###
+# 3.4 Pratik - Laptop ve fiyat > 1000
+POST http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "bool": {
+      "must": [
+        { "match": { "name": "Laptop" } }
+      ],
+      "filter": [
+        { "range": { "price": { "gt": 1000 } } }
+      ]
+    }
+  }
+}
+
+###
+# 3.4 Praktik - Kategori ve stok filtresi
+POST http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "terms": { "category": ["Accessories", "Monitors"] }
+        },
+        {
+          "range": { "stock_quantity": { "gt": 0 } }
+        }
+      ]
+    }
+  }
+}
+
+###
+# 3.4 Pratik - Açıklama ve etiket filtresi
+POST http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "bool": {
+      "must": [
+        { "match_phrase": { "description": "latest features" } }
+      ],
+      "must_not": [
+        { "term": { "tags": "gaming" } }
+      ]
+    }
+  }
+}
+
+###
+# 3.5 Pratik - WARN seviyesindeki loglar
+POST http://localhost:9200/application_logs-*/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "term": {
+      "level": "WARN"
+    }
+  }
+}
+
+###
+# 3.5 Pratik - Son 1 saatteki ERROR logları
+POST http://localhost:9200/application_logs-*/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "bool": {
+      "filter": [
+        { "term": { "level": "ERROR" } },
+        {
+          "range": {
+            "@timestamp": {
+              "gte": "now-1h/h",
+              "lte": "now/h"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "sort": [ { "@timestamp": "desc" } ]
+}
+
+###
+# 3.5 Pratik - Failed mesajları ve servis filtresi
+POST http://localhost:9200/application_logs-*/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "bool": {
+      "must": [
+        { "match": { "message": "failed" } }
+      ],
+      "filter": [
+        { "terms": { "service_name": ["auth-service", "payment-service"] } }
+      ]
+    }
+  }
+}

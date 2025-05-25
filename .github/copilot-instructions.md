@@ -77,6 +77,7 @@ Uygulama, eğitim sürecini kolaylaştıracak şu işlevlere sahip olacaktır:
 2.  **Veri Yönetimi:**
   * **`products` Veri Seti:** `products` index'ine, eğitimde kullanılacak standart bir veri setini (`Section02.md` dosyasında belirtilen örnekler gibi) yükleyebilecek bir arayüz sunacaktır.
   * **Arka Plan Log Yazma Servisi:** Başlatılıp durdurulabilen bir arka plan hizmeti, `application_logs` index'ine sürekli olarak çeşitli seviyelerde (INFO, WARN, ERROR) loglar yazacaktır.
+  * **Tarihsel Veri Oluşturma:** Geriye dönük 30 günlük log verisi oluşturan özellik. Bu özellik iş günleri/hafta sonu farkını gözetir ve çalışma saatleri dışında daha az veri üretir. Eğitim öncesinde zengin bir veri seti hazırlamak için kullanılır.
 
 ### `application_logs` Index Template Mapping'i
 
@@ -123,6 +124,29 @@ Uygulama tarafından oluşturulacak olan index template'i, log verilerinin doğr
   }
 }
 ```
+
+### Tarihsel Veri Oluşturma Özelliği
+
+Eğitim öncesinde zengin bir veri seti hazırlamak amacıyla, uygulama geriye dönük tarihsel log verisi oluşturma yeteneğine sahiptir:
+
+#### Özellikler:
+* **Veri Süresi:** Varsayılan olarak 30 gün geriye dönük veri oluşturur
+* **İş Günü/Hafta Sonu Farkı:** Hafta sonu günlerinde (Cumartesi/Pazar) normal güne göre %10 daha az log üretir
+* **Çalışma Saatleri Duyarlılığı:** 08:00-17:00 dışındaki saatlerde normal saatlere göre %10 daha az log üretir
+* **Gerçekçi Dağılım:** Saatlik bazda 60-120 arası log üretir (dakikada 1-2 log)
+* **Veri Kalitesi:** Anlık log üretimi ile aynı kalitede veri (log seviyeleri, mesajlar, exception detayları)
+
+#### Teknik Detaylar:
+* **Log Dağılımı:** %70 INFO, %20 WARN, %10 ERROR
+* **Index Formatı:** `application_logs-YYYY-MM-DD`
+* **Arka Plan İşlemi:** UI'yı bloklamadan arka planda çalışır
+* **İlerleme Takibi:** Console logları ile her günün tamamlanması izlenebilir
+* **Çakışma Kontrolü:** Aynı anda birden fazla tarihsel veri üretimi engellenir
+
+#### Beklenen Veri Miktarı:
+* **Normal iş günü:** ~2,400-2,900 log/gün
+* **Hafta sonu/mesai dışı:** ~2,200-2,600 log/gün  
+* **30 gün toplam:** Yaklaşık 70,000-85,000 log
 
 ## 10. Önemli Not
 

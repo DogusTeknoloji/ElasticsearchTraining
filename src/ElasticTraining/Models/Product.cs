@@ -8,17 +8,16 @@ public class Product
     [Keyword]
     public string Sku { get; set; } = string.Empty;
 
-    [Text(Analyzer = "english")]
-    [Keyword(Name = "keyword")]
+    [Text(Analyzer = "english", Name = "product_name")]
     public string Name { get; set; } = string.Empty;
 
-    [Text(Analyzer = "english")]
+    [Text(Analyzer = "english", Name = "product_description")]
     public string Description { get; set; } = string.Empty;
 
     [Number(NumberType.ScaledFloat, ScalingFactor = 100)]
     public decimal Price { get; set; }
 
-    [Number(NumberType.Integer)]
+    [Number(NumberType.Integer, Name = "stock_quantity")]
     public int StockQuantity { get; set; }
 
     [Keyword]
@@ -27,9 +26,9 @@ public class Product
     [Keyword]
     public List<string> Tags { get; set; } = new();
 
-    [Date]
+    [Date(Name = "created_date")]
     public DateTime CreatedDate { get; set; }
 
-    [Boolean]
+    [Boolean(Name = "is_active")]
     public bool IsActive { get; set; }
 }

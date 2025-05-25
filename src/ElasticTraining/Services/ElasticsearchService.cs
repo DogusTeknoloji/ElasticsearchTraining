@@ -1,18 +1,16 @@
 using ElasticTraining.Models;
 using Nest;
+using Elasticsearch.Net;
 
 namespace ElasticTraining.Services;
 
-public class ElasticsearchService : IElasticsearchService
+public class ElasticsearchService(
+    IElasticClient client,
+    ILogger<ElasticsearchService> logger)
+    : IElasticsearchService
 {
-    private readonly IElasticClient _client;
-    private readonly ILogger<ElasticsearchService> _logger;
-
-    public ElasticsearchService(IElasticClient client, ILogger<ElasticsearchService> logger)
-    {
-        _client = client;
-        _logger = logger;
-    }
+    private readonly IElasticClient _client = client;
+    private readonly ILogger<ElasticsearchService> _logger = logger;
 
     public async Task<bool> IsElasticsearchAvailableAsync()
     {
@@ -23,7 +21,7 @@ public class ElasticsearchService : IElasticsearchService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Elasticsearch bağlantı kontrolü sırasında hata oluştu");
+            _logger.LogError(ex, "Error occurred during Elasticsearch connection check");
             return false;
         }
     }
@@ -37,12 +35,12 @@ public class ElasticsearchService : IElasticsearchService
             {
                 return $"Cluster: {response.ClusterName}, Status: {response.Status}, Nodes: {response.NumberOfNodes}, Data Nodes: {response.NumberOfDataNodes}";
             }
-            return "Cluster health bilgisi alınamadı";
+            return "Cluster health information could not be retrieved";
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Cluster health bilgisi alınırken hata oluştu");
-            return "Hata: " + ex.Message;
+            _logger.LogError(ex, "Error occurred while retrieving cluster health information");
+            return "Error: " + ex.Message;
         }
     }
 
@@ -50,62 +48,66 @@ public class ElasticsearchService : IElasticsearchService
     {
         try
         {
-            var templateRequest = new PutIndexTemplateRequest("application_logs_template")
-            {
-                IndexPatterns = new[] { "application_logs-*" },
-                Mappings = new TypeMapping
-                {
-                    Dynamic = false,
-                    Properties = new Properties
-                    {
-                        ["@timestamp"] = new DateProperty(),
-                        ["correlation_id"] = new KeywordProperty(),
-                        ["service_name"] = new KeywordProperty(),
-                        ["level"] = new KeywordProperty(),
-                        ["thread_name"] = new KeywordProperty(),
-                        ["logger_name"] = new KeywordProperty(),
-                        ["host_ip"] = new IpProperty(),
-                        ["message"] = new TextProperty(),
-                        ["exception"] = new ObjectProperty
-                        {
-                            Properties = new Properties
-                            {
-                                ["type"] = new KeywordProperty(),
-                                ["message"] = new TextProperty(),
-                                ["stack_trace"] = new TextProperty { Index = false },
-                                ["inner_exception"] = new ObjectProperty
-                                {
-                                    Properties = new Properties
-                                    {
-                                        ["type"] = new KeywordProperty(),
-                                        ["message"] = new TextProperty(),
-                                        ["stack_trace"] = new TextProperty { Index = false }
+            // Using modern Composable Index Template (Elasticsearch 7.8+)
+            var templateJson = @"{
+                ""index_patterns"": [""application_logs-*""],
+                ""priority"": 1,
+                ""template"": {
+                    ""mappings"": {
+                        ""dynamic"": false,
+                        ""properties"": {
+                            ""@timestamp"": { ""type"": ""date"" },
+                            ""correlation_id"": { ""type"": ""keyword"" },
+                            ""service_name"": { ""type"": ""keyword"" },
+                            ""level"": { ""type"": ""keyword"" },
+                            ""thread_name"": { ""type"": ""keyword"" },
+                            ""logger_name"": { ""type"": ""keyword"" },
+                            ""host_ip"": { ""type"": ""ip"" },
+                            ""message"": { ""type"": ""text"" },
+                            ""exception"": {
+                                ""type"": ""object"",
+                                ""properties"": {
+                                    ""type"": { ""type"": ""keyword"" },
+                                    ""message"": { ""type"": ""text"" },
+                                    ""stack_trace"": { ""type"": ""text"", ""index"": false },
+                                    ""inner_exception"": {
+                                        ""type"": ""object"",
+                                        ""properties"": {
+                                            ""type"": { ""type"": ""keyword"" },
+                                            ""message"": { ""type"": ""text"" },
+                                            ""stack_trace"": { ""type"": ""text"", ""index"": false }
+                                        }
                                     }
                                 }
-                            }
-                        },
-                        ["http_status_code"] = new NumberProperty(NumberType.Integer),
-                        ["response_time_ms"] = new NumberProperty(NumberType.Long)
+                            },
+                            ""http_status_code"": { ""type"": ""integer"" },
+                            ""response_time_ms"": { ""type"": ""long"" }
+                        }
                     }
                 }
-            };
+            }";
 
-            var response = await _client.Indices.PutTemplateAsync(templateRequest);
-            
-            if (response.IsValid)
+            var response = await _client.LowLevel.DoRequestAsync<StringResponse>(
+                Elasticsearch.Net.HttpMethod.PUT,
+                "/_index_template/application_logs_template",
+                CancellationToken.None,
+                PostData.String(templateJson)
+            );
+
+            if (response.Success)
             {
-                _logger.LogInformation("application_logs template başarıyla oluşturuldu");
+                _logger.LogInformation("application_logs modern index template created successfully");
                 return true;
             }
             else
             {
-                _logger.LogError("Template oluşturma hatası: {Error}", response.DebugInformation);
+                _logger.LogError("Modern index template creation error: {Error}", response.Body);
                 return false;
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Template oluşturulurken hata oluştu");
+            _logger.LogError(ex, "Error occurred while creating template");
             return false;
         }
     }
@@ -117,7 +119,7 @@ public class ElasticsearchService : IElasticsearchService
             var indexExists = await _client.Indices.ExistsAsync("products");
             if (indexExists.Exists)
             {
-                _logger.LogInformation("products index zaten mevcut");
+                _logger.LogInformation("products index already exists");
                 return true;
             }
 
@@ -127,18 +129,18 @@ public class ElasticsearchService : IElasticsearchService
 
             if (createIndexResponse.IsValid)
             {
-                _logger.LogInformation("products index başarıyla oluşturuldu");
+                _logger.LogInformation("products index created successfully");
                 return true;
             }
             else
             {
-                _logger.LogError("products index oluşturma hatası: {Error}", createIndexResponse.DebugInformation);
+                _logger.LogError("products index creation error: {Error}", createIndexResponse.DebugInformation);
                 return false;
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "products index oluşturulurken hata oluştu");
+            _logger.LogError(ex, "Error occurred while creating products index");
             return false;
         }
     }
@@ -148,26 +150,65 @@ public class ElasticsearchService : IElasticsearchService
         try
         {
             var sampleProducts = GetSampleProducts();
-            
+
             var bulkResponse = await _client.BulkAsync(b => b
                 .Index("products")
                 .IndexMany(sampleProducts, (bd, product) => bd.Id(product.Sku).Document(product))
             );
 
-            if (bulkResponse.IsValid)
+            // NEST sometimes incorrectly parses successful bulk operations
+            // So we check both NEST validation and HTTP status
+            var httpSuccessful = bulkResponse.ApiCall?.HttpStatusCode >= 200 && bulkResponse.ApiCall?.HttpStatusCode < 300;
+            var hasErrors = bulkResponse.Errors;
+
+            if (httpSuccessful && !hasErrors)
             {
-                _logger.LogInformation("{Count} örnek ürün başarıyla yüklendi", sampleProducts.Count);
+                var successCount = bulkResponse.Items?.Count(item =>
+                    item.Status >= 200 && item.Status < 300) ?? 0;
+
+                _logger.LogInformation("{Count} sample products loaded successfully (HTTP: {HttpStatus})",
+                    successCount, bulkResponse.ApiCall?.HttpStatusCode);
                 return true;
+            }
+            else if (httpSuccessful && hasErrors)
+            {
+                // HTTP successful but NEST errors flag is true - detailed check
+                var successItems = bulkResponse.Items?.Where(item =>
+                    item.Status >= 200 && item.Status < 300).ToList() ?? new();
+                var errorItems = bulkResponse.Items?.Where(item =>
+                    item.Status < 200 || item.Status >= 300).ToList() ?? new();
+
+                if (successItems.Any() && !errorItems.Any())
+                {
+                    // Actually all successful, NEST is giving false positive
+                    _logger.LogInformation("{Count} sample products loaded successfully (NEST false positive error ignored)",
+                        successItems.Count);
+                    return true;
+                }
+                else
+                {
+                    _logger.LogWarning("Partial success: {SuccessCount} successful, {ErrorCount} failed",
+                        successItems.Count, errorItems.Count);
+
+                    foreach (var errorItem in errorItems)
+                    {
+                        _logger.LogError("Failed item: {Id}, Status: {Status}, Error: {Error}",
+                            errorItem.Id, errorItem.Status, errorItem.Error?.Reason);
+                    }
+
+                    return successItems.Count > 0; // Returns true if at least some succeeded
+                }
             }
             else
             {
-                _logger.LogError("Örnek ürün yükleme hatası: {Error}", bulkResponse.DebugInformation);
+                _logger.LogError("Sample product loading error: HTTP {HttpStatus}, Errors: {HasErrors}, Debug: {Debug}",
+                    bulkResponse.ApiCall?.HttpStatusCode, hasErrors, bulkResponse.DebugInformation);
                 return false;
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Örnek ürünler yüklenirken hata oluştu");
+            _logger.LogError(ex, "Error occurred while loading sample products");
             return false;
         }
     }

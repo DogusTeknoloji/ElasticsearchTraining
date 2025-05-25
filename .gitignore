@@ -279,6 +279,25 @@ FakesAssemblies/
 .ntvs_analysis.dat
 node_modules/
 
+# Docker volumes
+**/esdata*/
+
+# Test results
+TestResults/
+
+# Coverage
+coverage/
+*.coverage
+*.coveragexml
+
+# Python virtualenv (if any)
+venv/
+ENV/
+
+# Misc
+*.swp
+*.bak
+
 # Visual Studio 6 build log
 *.plg
 

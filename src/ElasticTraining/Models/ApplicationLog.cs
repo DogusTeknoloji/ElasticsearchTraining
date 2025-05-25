@@ -7,60 +7,33 @@ public class ApplicationLog
     [Date(Name = "@timestamp")]
     public DateTime Timestamp { get; set; }
 
-    [Keyword]
+    [Keyword(Name = "correlation_id")]
     public string? CorrelationId { get; set; }
 
-    [Keyword]
+    [Keyword(Name = "service_name")]
     public string ServiceName { get; set; } = string.Empty;
 
-    [Keyword]
+    [Keyword(Name = "level")]
     public string Level { get; set; } = string.Empty;
 
-    [Keyword]
+    [Keyword(Name = "thread_name")]
     public string ThreadName { get; set; } = string.Empty;
 
-    [Keyword]
+    [Keyword(Name = "logger_name")]
     public string LoggerName { get; set; } = string.Empty;
 
-    [Ip]
+    [Ip(Name = "host_ip")]
     public string HostIp { get; set; } = string.Empty;
 
-    [Text]
+    [Text(Name = "message")]
     public string Message { get; set; } = string.Empty;
 
-    [Object]
+    [Object(Name = "exception")]
     public ExceptionDetails? Exception { get; set; }
 
-    [Number(NumberType.Integer)]
+    [Number(NumberType.Integer, Name = "http_status_code")]
     public int? HttpStatusCode { get; set; }
 
-    [Number(NumberType.Long)]
+    [Number(NumberType.Long, Name = "response_time_ms")]
     public long? ResponseTimeMs { get; set; }
-}
-
-public class ExceptionDetails
-{
-    [Keyword]
-    public string Type { get; set; } = string.Empty;
-
-    [Text]
-    public string Message { get; set; } = string.Empty;
-
-    [Text(Index = false)]
-    public string StackTrace { get; set; } = string.Empty;
-
-    [Object]
-    public InnerExceptionDetails? InnerException { get; set; }
-}
-
-public class InnerExceptionDetails
-{
-    [Keyword]
-    public string Type { get; set; } = string.Empty;
-
-    [Text]
-    public string Message { get; set; } = string.Empty;
-
-    [Text(Index = false)]
-    public string StackTrace { get; set; } = string.Empty;
 }

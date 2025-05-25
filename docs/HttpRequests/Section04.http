@@ -1,0 +1,296 @@
+### Elasticsearch Eğitimi - Bölüm 4: Aggregation'lar HTTP Örnekleri
+
+# Bu dosya, Textbook Section04.md bölümündeki aggregation örneklerini HTTP request formatında içerir.
+# VS Code REST Client uzantısı ile kullanabilirsiniz.
+
+### 1. Basic Aggregation Example - Categories by Terms
+POST http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match_all": {}
+  },
+  "aggs": {
+    "my_first_aggregation": {
+      "terms": { "field": "category" }
+    }
+  },
+  "size": 0
+}
+
+### 2. Products by Category - Terms Aggregation
+POST http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+  "aggs": {
+    "products_by_category": {
+      "terms": { "field": "category" }
+    }
+  },
+  "size": 0
+}
+
+### 3. Products by Price Range - Range Aggregation
+POST http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+  "aggs": {
+    "products_by_price_range": {
+      "range": {
+        "field": "price",
+        "ranges": [
+          { "to": 100.0 },
+          { "from": 100.0, "to": 500.0 },
+          { "from": 500.0 }
+        ]
+      }
+    }
+  },
+  "size": 0
+}
+
+### 4. Products by Price Histogram - Histogram Aggregation
+POST http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+  "aggs": {
+    "products_by_price_histogram": {
+      "histogram": {
+        "field": "price",
+        "interval": 500,
+        "min_doc_count": 1
+      }
+    }
+  },
+  "size": 0
+}
+
+### 5. Logs Over Time - Date Histogram Aggregation
+POST http://localhost:9200/application_logs-*/_search
+Content-Type: application/json
+
+{
+  "aggs": {
+    "logs_over_time": {
+      "date_histogram": {
+        "field": "@timestamp",
+        "calendar_interval": "1h",
+        "time_zone": "Europe/Istanbul"
+      }
+    }
+  },
+  "size": 0
+}
+
+### 6. Stock Status Split - Filters Aggregation
+POST http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+  "aggs": {
+    "stock_status_split": {
+      "filters": {
+        "filters": {
+          "in_stock_products": { "term": { "is_active": true } },
+          "out_of_stock_products": { "term": { "is_active": false } }
+        }
+      }
+    }
+  },
+  "size": 0
+}
+
+### 7. Average Price and Total Stock - Basic Metric Aggregations
+POST http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+  "aggs": {
+    "average_price": {
+      "avg": { "field": "price" }
+    },
+    "total_stock": {
+      "sum": { "field": "stock_quantity"}
+    }
+  },
+  "size": 0
+}
+
+### 8. Price Statistics - Stats Aggregation
+POST http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+  "aggs": {
+    "price_stats": {
+      "stats": { "field": "price" }
+    }
+  },
+  "size": 0
+}
+
+### 9. Distinct Categories Count - Cardinality Aggregation
+POST http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+  "aggs": {
+    "distinct_categories": {
+      "cardinality": { "field": "category" }
+    }
+  },
+  "size": 0
+}
+
+### 10. Nested Aggregation - Average Price per Category
+POST http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+  "aggs": {
+    "categories": {
+      "terms": { "field": "category" },
+      "aggs": {
+        "average_price_per_category": {
+          "avg": { "field": "price" }
+        }
+      }
+    }
+  },
+  "size": 0
+}
+
+### 11. Nested Aggregation - Logs by Service and Level
+POST http://localhost:9200/application_logs-*/_search
+Content-Type: application/json
+
+{
+  "aggs": {
+    "logs_by_service": {
+      "terms": { "field": "service_name" },
+      "aggs": {
+        "logs_by_level": {
+          "terms": { "field": "level" }
+        }
+      }
+    }
+  },
+  "size": 0
+}
+
+### ===============================================
+### PRACTICAL EXAMPLES - Products Analysis
+### ===============================================
+
+### 12. Top 5 Categories by Product Count
+POST http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+  "aggs": {
+    "top_categories": {
+      "terms": {
+        "field": "category",
+        "size": 5,
+        "order": { "_count": "desc" }
+      }
+    }
+  },
+  "size": 0
+}
+
+### 13. Products Price Overview - Min, Max, Average
+POST http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+  "aggs": {
+    "price_overview": {
+      "stats": { "field": "price" }
+    }
+  },
+  "size": 0
+}
+
+### 14. Tags Analysis - Product Count and Average Stock per Tag
+POST http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+  "aggs": {
+    "tags_analysis": {
+      "terms": { "field": "tags" },
+      "aggs": {
+        "average_stock_per_tag": {
+          "avg": { "field": "stock_quantity" }
+        }
+      }
+    }
+  },
+  "size": 0
+}
+
+### ===============================================
+### PRACTICAL EXAMPLES - Log Analysis
+### ===============================================
+
+### 15. Logs per Service - Count by Service Name
+POST http://localhost:9200/application_logs-*/_search
+Content-Type: application/json
+
+{
+  "aggs": {
+    "logs_per_service": {
+      "terms": { "field": "service_name", "size": 10 }
+    }
+  },
+  "size": 0
+}
+
+### 16. Hourly Error Logs in Last 24 Hours
+POST http://localhost:9200/application_logs-*/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "bool": {
+      "filter": [
+        { "term": { "level": "ERROR" } },
+        { "range": { "@timestamp": { "gte": "now-24h/h" } } }
+      ]
+    }
+  },
+  "aggs": {
+    "hourly_errors": {
+      "date_histogram": {
+        "field": "@timestamp",
+        "calendar_interval": "1h",
+        "min_doc_count": 1
+      }
+    }
+  },
+  "size": 0
+}
+
+### 17. Top 5 Error-Producing Host IPs
+POST http://localhost:9200/application_logs-*/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "term": { "level": "ERROR" }
+  },
+  "aggs": {
+    "top_error_hosts": {
+      "terms": {
+        "field": "host_ip",
+        "size": 5
+      }
+    }
+  },
+  "size": 0
+}
