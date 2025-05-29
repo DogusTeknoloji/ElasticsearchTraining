@@ -1722,24 +1722,31 @@
     ]
   },
   "packageFolders": {
-    "/home/alper/.nuget/packages/": {}
+    "C:\\Users\\alper\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/alper/Projects/ElasticsearchTraining/src/ElasticTraining/ElasticTraining.csproj",
+      "projectUniqueName": "C:\\Projects\\ElasticsearchTraining\\src\\ElasticTraining\\ElasticTraining.csproj",
       "projectName": "ElasticTraining",
-      "projectPath": "/home/alper/Projects/ElasticsearchTraining/src/ElasticTraining/ElasticTraining.csproj",
-      "packagesPath": "/home/alper/.nuget/packages/",
-      "outputPath": "/home/alper/Projects/ElasticsearchTraining/src/ElasticTraining/obj/",
+      "projectPath": "C:\\Projects\\ElasticsearchTraining\\src\\ElasticTraining\\ElasticTraining.csproj",
+      "packagesPath": "C:\\Users\\alper\\.nuget\\packages\\",
+      "outputPath": "C:\\Projects\\ElasticsearchTraining\\src\\ElasticTraining\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
-        "/home/alper/.nuget/NuGet/NuGet.Config"
+        "C:\\Users\\alper\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
       ],
       "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -1758,7 +1765,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.300"
+      "SdkAnalysisLevel": "9.0.200"
     },
     "frameworks": {
       "net9.0": {
@@ -1796,7 +1803,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.300/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.203/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

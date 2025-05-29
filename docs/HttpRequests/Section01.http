@@ -1,14 +1,20 @@
 # Bölüm 1: Elasticsearch Dünyasına Merhaba De!
 # HTTP Request Örnekleri
+@baseUrl = http://localhost:9200
+@token = fkljsjflksjdflsjlkldkdlk
+
+###
+
+GET {{baseUrl}}/
 
 ###
 # 1. Cluster Sağlığını Kontrol Et
-GET http://localhost:9200/_cluster/health
+GET {{baseUrl}}/_cluster/health
 
 ###
 # 2. Node'ları Listele
-GET http://localhost:9200/_cat/nodes?v&h=ip,name,heap.percent,load_1m
+GET {{baseUrl}}/_cat/nodes?v&h=ip,name,heap.percent,load_1m
 
 ###
 # 3. Mevcut Index'leri Listele
-GET http://localhost:9200/_cat/indices?v
+GET {{baseUrl}}/_cat/indices?v
