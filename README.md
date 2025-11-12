@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![.NET](https://img.shields.io/badge/.NET-9.0-512BD4.svg)](https://dotnet.microsoft.com/)
-[![Elasticsearch](https://img.shields.io/badge/Elasticsearch-8.13.4-005571.svg)](https://www.elastic.co/)
+[![Elasticsearch](https://img.shields.io/badge/Elasticsearch-8.19.2-005571.svg)](https://www.elastic.co/)
 
 This repository contains comprehensive Elasticsearch training materials designed for developers, including a practical .NET 9.0 log simulator application for hands-on learning.
 
@@ -184,8 +184,8 @@ Configure Elasticsearch connection in `src/ElasticTraining/appsettings.json`:
 
 The included Docker Compose setup provides:
 
-- **Elasticsearch 8.13.4** - Single node cluster optimized for development
-- **Kibana 8.13.4** - Data visualization and dev tools interface
+- **Elasticsearch 8.19.2** - Single node cluster optimized for development
+- **Kibana 8.19.2** - Data visualization and dev tools interface
 - **Persistent Storage** - Data persists between container restarts
 - **Memory Settings** - 1GB heap size (adjust based on your system)
 

@@ -23,7 +23,7 @@ If applicable, add screenshots to help explain your problem.
 **Environment (please complete the following information):**
 - OS: [e.g. Windows, Linux, macOS]
 - .NET Version: [e.g. 9.0]
-- Elasticsearch Version: [e.g. 8.13.4]
+- Elasticsearch Version: [e.g. 8.19.2]
 - Browser [if applicable]
 
 **Additional context**

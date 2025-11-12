@@ -12,6 +12,10 @@ Peki, sen kimsin? Elasticsearch ile daha önce bir tanışıklığın oldu mu? O
 
 Şimdi, kahveni (veya çayını, tercih senin!) hazırla, rahat bir koltuğa kurul ve Elasticsearch'ün veriyle dolu dünyasına doğru keyifli bir yolculuğa çıkmaya hazırlan. İlk durağımız: "Neden böyle bir şeye ihtiyacımız var ki?" sorusunun can alıcı cevapları!
 
+**Bu Eğitim Hakkında:**
+
+Bu eğitim materyali Elasticsearch 8.19.2 ve NEST 7.17.5 (.NET istemcisi) kullanılarak geliştirilmiştir. Burada ele alınan temel kavramlar, mimari ve arama prensipleri hem Elasticsearch 8.x hem de 9.x sürümleri için geçerlidir. Production ortamı değerlendirmeleri ve versiyon karşılaştırması için Kapanış bölümüne (Bölüm 6) bakınız.
+
 ## 1.2 "Neden Elasticsearch?" Yoksa Sen Hala `LIKE` mı Kullanıyorsun?
 
 Ah, o meşhur `LIKE '%search_term%'` sorguları... Bir zamanlar hepimiz oradaydık. Veritabanında milyonlarca satır arasında bir kelime aramak, samanlıkta iğne aramaktan farksızdı, değil mi? Hele bir de kullanıcı "hem onu içersin hem de bunu içermesin ama şununla başlasın" gibi isteklerle gelince... İşte tam da bu noktada geleneksel ilişkisel veritabanları (RDBMS) biraz teklemeye başlıyor.
