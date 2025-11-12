@@ -78,10 +78,11 @@ Enhancement suggestions are tracked as GitHub issues. When creating an enhanceme
 
 ### Technical Standards
 
-- **Elasticsearch version**: Target 8.13.4 or compatible versions
+- **Elasticsearch version**: Target 8.19.2 or compatible versions (8.x and 9.x)
 - **Code examples**: Working, tested examples only
 - **.NET compatibility**: Ensure compatibility with .NET 9.0
 - **Docker support**: All examples should work with the provided Docker setup
+- **NEST client**: Currently using NEST 7.17.5 (note: EOL late 2025)
 
 ### Language Guidelines
 

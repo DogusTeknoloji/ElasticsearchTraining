@@ -20,7 +20,7 @@ Mid to Senior Level Full Stack Software Developers. (Assumed to be familiar with
     version: '3.7'
     services:
       elasticsearch:
-        image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4 # Check for the current stable version
+        image: docker.elastic.co/elasticsearch/elasticsearch:8.19.2 # Check for the current stable version
         container_name: es01
         environment:
           - discovery.type=single-node
@@ -31,7 +31,7 @@ Mid to Senior Level Full Stack Software Developers. (Assumed to be familiar with
         volumes:
           - esdata01:/usr/share/elasticsearch/data
       kibana:
-        image: docker.elastic.co/kibana/kibana:8.13.4 # Should be the same version as Elasticsearch
+        image: docker.elastic.co/kibana/kibana:8.19.2 # Should be the same version as Elasticsearch
         container_name: kib01
         ports:
           - "5601:5601"

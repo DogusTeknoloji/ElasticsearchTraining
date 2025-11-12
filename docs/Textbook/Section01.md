@@ -12,6 +12,10 @@ So, who are you? Have you had any previous acquaintance with Elasticsearch? What
 
 Now, prepare your coffee (or tea, your choice!), settle into a comfortable chair, and get ready for an enjoyable journey into the data-filled world of Elasticsearch. Our first stop: the crucial answers to the question, "Why do we even need something like this?"
 
+**About This Training:**
+
+This training material was developed using Elasticsearch 8.19.2 and NEST 7.17.5 (.NET client). The core concepts, architecture, and search principles covered here apply to both Elasticsearch 8.x and 9.x versions. For production deployment considerations and version comparisons, see the Closing section (Chapter 6).
+
 ## 1.2 "Why Elasticsearch?" Are You Still Using `LIKE`?
 
 Ah, those famous `LIKE '%search_term%'` queries... We've all been there at some point. Searching for a word among millions of rows in a database was no different from looking for a needle in a haystack, right? Especially when the user came up with requests like "it should contain this and not that, but start with this..." This is precisely where traditional relational databases (RDBMS) start to falter a bit.

@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2025-01-12
+
+### Changed
+- Updated Elasticsearch version from 8.13.4 to 8.19.2
+- Updated Kibana version from 8.13.4 to 8.19.2
+- Updated all Docker Compose examples to use Elasticsearch 8.19.2
+
+### Added
+- Comprehensive Elasticsearch 8.x vs 9.x version comparison in Section06 (both EN/TR)
+- Version compatibility notes in Section01 introduction (both EN/TR)
+- NEST end-of-life warnings and migration guidance
+- Documentation of Elastic.Clients.Elasticsearch as NEST successor
+- Enhanced CLAUDE.md with version information and migration path
+- Breaking changes documentation for Elasticsearch 9.0
+- Production deployment recommendations for version selection
+
+### Documentation
+- Added detailed migration strategy for upgrading to Elasticsearch 9.0
+- Documented NEST 7.17.5 as final version with EOL in late 2025
+- Added .NET client migration considerations to training materials
+- Updated version references across all documentation files
+
+## [1.0.0] - 2024-05-25
+
 ### Added
 - Initial release of Elasticsearch Training Materials
 - Complete 6-hour structured training curriculum

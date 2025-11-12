@@ -1,14 +1,14 @@
 # Elasticsearch Eğitimi: Kapsamlı Ders İçeriği (6 Saat)
 
-## Eğitimin Temel Hedefi:
+## Eğitimin Temel Hedefi
 
 Katılımcıların Elasticsearch'ün temel mimarisini, anahtar kavramlarını anlamalarını, veri indeksleme (indexing), sorgulama (searching), analiz (aggregations) yeteneklerini kavramalarını ve bu bilgileri pratik senaryolarda uygulayabilir hale gelmelerini sağlamaktır. Ayrıca, Elasticsearch'ün hangi tür problemlere çözüm sunduğunu ve production ortamında dikkat edilmesi gereken temel noktaları fark etmeleri hedeflenir.
 
-## Hedef Kitle:
+## Hedef Kitle
 
 Orta ve Kıdemli Seviye Full Stack Yazılım Geliştiriciler. (REST API'ler, JSON, temel veritabanı ve dağıtık sistem kavramlarına aşina oldukları varsayılır.)
 
-## Ön Hazırlıklar ve Gerekli Ortam:
+## Ön Hazırlıklar ve Gerekli Ortam
 
 * **Docker:** Her katılımcının bilgisayarında Docker Desktop'ın kurulu ve çalışır durumda olması.
 
@@ -20,7 +20,7 @@ Orta ve Kıdemli Seviye Full Stack Yazılım Geliştiriciler. (REST API'ler, JSO
     version: '3.7'
     services:
       elasticsearch:
-        image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4 # Güncel stabil sürümü kontrol edin
+        image: docker.elastic.co/elasticsearch/elasticsearch:8.19.2 # Güncel stabil sürümü kontrol edin
         container_name: es01
         environment:
           - discovery.type=single-node
@@ -31,7 +31,7 @@ Orta ve Kıdemli Seviye Full Stack Yazılım Geliştiriciler. (REST API'ler, JSO
         volumes:
           - esdata01:/usr/share/elasticsearch/data
       kibana:
-        image: docker.elastic.co/kibana/kibana:8.13.4 # Elasticsearch ile aynı sürüm olmalı
+        image: docker.elastic.co/kibana/kibana:8.19.2 # Elasticsearch ile aynı sürüm olmalı
         container_name: kib01
         ports:
           - "5601:5601"
