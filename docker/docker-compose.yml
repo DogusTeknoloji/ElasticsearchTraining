@@ -1,4 +1,5 @@
 version: '3.7'
+name: elastic-training
 services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.19.2 # Güncel stabil sürümü kontrol edin
